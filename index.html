@@ -1,1 +1,922 @@
- 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Axenda Contable — Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    Babel.registerPreset('react-classic', {
+      presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]]
+    });
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --p:  #1B2D4F;
+      --g:  #2BAF82;
+      --y:  #E8A020;
+      --r:  #E04545;
+      --bg: #F0F2F7;
+      --tx: #1B2D4F;
+      --ts: #6B7A8D;
+      --bd: #DDE1EA;
+      --wh: #FFFFFF;
+    }
+    html, body { height: 100%; background: var(--bg); -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'DM Sans', sans-serif; color: var(--tx); }
+    #root { min-height: 100%; }
+
+    /* ─── Layout ────────────────────────────────────────────────────── */
+    .wrap { max-width: 480px; margin: 0 auto; }
+
+    /* ─── Login ────────────────────────────────────────────────────── */
+    .login-page {
+      min-height: 100dvh;
+      background: var(--p);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+    .login-logo { text-align: center; margin-bottom: 36px; }
+    .login-logo h1 { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1.5px; }
+    .login-logo p  { font-size: 14px; color: rgba(255,255,255,.55); margin-top: 4px; font-weight: 300; }
+    .login-card {
+      background: var(--wh);
+      border-radius: 22px;
+      padding: 32px 24px 28px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--ts); margin-bottom: 7px; }
+    .field input {
+      width: 100%; padding: 14px 16px;
+      border: 1.5px solid var(--bd);
+      border-radius: 12px;
+      font-family: inherit; font-size: 16px;
+      outline: none; transition: border-color .2s;
+      background: var(--bg); color: var(--tx);
+    }
+    .field input:focus { border-color: var(--p); background: var(--wh); }
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 50px; }
+    .eye-btn {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--ts); padding: 4px; line-height: 0;
+    }
+    .btn-full {
+      width: 100%; padding: 15px;
+      background: var(--g); color: #fff; border: none;
+      border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s, transform .1s; margin-top: 6px;
+    }
+    .btn-full:active  { transform: scale(.98); }
+    .btn-full:disabled { opacity: .55; cursor: default; }
+    .btn-full.rojo { background: var(--r); }
+    .login-foot { text-align: center; margin-top: 20px; font-size: 13px; color: rgba(255,255,255,.5); }
+    .login-foot a { color: var(--g); text-decoration: none; font-weight: 500; }
+    .err-box {
+      background: #fee8e8; color: var(--r); padding: 11px 14px;
+      border-radius: 10px; font-size: 14px; margin-bottom: 16px; text-align: center;
+    }
+
+    /* ─── Inactive ──────────────────────────────────────────────────── */
+    .inactive-page {
+      min-height: 100dvh; background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px; text-align: center;
+    }
+    .inactive-icon { font-size: 64px; margin-bottom: 20px; }
+    .inactive-page h2 { font-size: 22px; font-weight: 700; color: var(--p); margin-bottom: 10px; }
+    .inactive-page p  { font-size: 15px; color: var(--ts); line-height: 1.5; margin-bottom: 36px; }
+    .btn-wa {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 26px; background: #25d366; color: #fff;
+      border-radius: 14px; text-decoration: none;
+      font-weight: 600; font-size: 15px;
+      box-shadow: 0 4px 16px rgba(37,211,102,.3);
+    }
+
+    /* ─── Header ────────────────────────────────────────────────────── */
+    .header {
+      background: var(--p); color: #fff; height: 60px;
+      padding: 0 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,.18);
+    }
+    .header-logo { font-size: 15px; font-weight: 700; letter-spacing: .5px; }
+    .header-logo em { font-style: normal; color: var(--g); }
+    .header-right { display: flex; align-items: center; gap: 6px; }
+    .header-nombre { font-size: 13px; color: rgba(255,255,255,.75); max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.12); border: none;
+      cursor: pointer; color: #fff; font-size: 18px;
+      position: relative; transition: background .2s;
+    }
+    .icon-btn:active { background: rgba(255,255,255,.22); }
+    .badge {
+      position: absolute; top: 4px; right: 4px;
+      background: var(--r); color: #fff; border-radius: 50%;
+      width: 16px; height: 16px; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .profile-rel { position: relative; }
+    .profile-dropdown {
+      position: absolute; right: 0; top: 48px;
+      background: var(--wh); border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.16);
+      min-width: 190px; overflow: hidden; z-index: 160;
+    }
+    .profile-dropdown button {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 14px 18px;
+      background: none; border: none;
+      font-family: inherit; font-size: 14px;
+      cursor: pointer; text-align: left; color: var(--tx);
+    }
+    .profile-dropdown button:hover { background: var(--bg); }
+    .profile-dropdown button.red { color: var(--r); }
+
+    /* ─── Content ────────────────────────────────────────────────────── */
+    .main { padding: 16px 16px 110px; max-width: 480px; margin: 0 auto; }
+
+    /* ─── Cards ──────────────────────────────────────────────────────── */
+    .card { background: var(--wh); border-radius: 18px; padding: 20px; margin-bottom: 12px; box-shadow: 0 1px 5px rgba(0,0,0,.06); }
+    .card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--ts); margin-bottom: 14px; }
+
+    /* ─── Semáforo ───────────────────────────────────────────────────── */
+    .semaforo { border-radius: 18px; padding: 22px 20px; margin-bottom: 12px; color: #fff; }
+    .semaforo.g { background: var(--g); }
+    .semaforo.y { background: var(--y); }
+    .semaforo.r { background: var(--r); }
+    .sem-estado { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .sem-sub    { font-size: 14px; opacity: .9; line-height: 1.4; margin-bottom: 18px; }
+    .pbar-bg { background: rgba(255,255,255,.3); border-radius: 99px; height: 8px; margin-bottom: 10px; }
+    .pbar-fill { height: 100%; border-radius: 99px; background: rgba(255,255,255,.9); transition: width .6s; }
+    .sem-foot { display: flex; justify-content: space-between; font-size: 11px; opacity: .85; flex-wrap: wrap; gap: 4px; }
+
+    /* ─── Cuota ─────────────────────────────────────────────────────── */
+    .cuota-monto { font-size: 34px; font-weight: 700; color: var(--p); margin: 6px 0 10px; }
+    .chip { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .chip.g { background: #ddfaef; color: var(--g); }
+    .chip.y { background: #fff3dc; color: var(--y); }
+    .chip.r { background: #fee8e8; color: var(--r); }
+    .cuota-vence { font-size: 13px; color: var(--ts); margin-top: 8px; }
+    .btn-pago {
+      width: 100%; padding: 14px; background: var(--g); color: #fff;
+      border: none; border-radius: 12px; font-family: inherit;
+      font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 16px;
+      transition: opacity .2s;
+    }
+    .btn-pago:active  { opacity: .8; }
+    .btn-pago:disabled { opacity: .55; }
+
+    /* ─── Deuda ─────────────────────────────────────────────────────── */
+    .deuda-card { border: 1.5px solid var(--r); border-radius: 18px; padding: 20px; margin-bottom: 12px; background: #fff5f5; }
+    .deuda-monto { font-size: 28px; font-weight: 700; color: var(--r); margin: 6px 0 8px; }
+    .deuda-desc  { font-size: 14px; color: var(--ts); margin-bottom: 18px; line-height: 1.4; }
+    .btn-contact {
+      display: block; width: 100%; padding: 13px; background: var(--r); color: #fff;
+      border: none; border-radius: 12px; font-family: inherit; font-size: 15px;
+      font-weight: 600; cursor: pointer; text-decoration: none; text-align: center;
+    }
+
+    /* ─── Chart ──────────────────────────────────────────────────────── */
+    .chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 4px; }
+    .fac-total { font-size: 26px; font-weight: 700; color: var(--p); margin-bottom: 4px; }
+    .fac-sub   { font-size: 12px; color: var(--ts); margin-bottom: 16px; }
+
+    /* ─── Planes ─────────────────────────────────────────────────────── */
+    .plan-item { border: 1.5px solid var(--bd); border-radius: 13px; padding: 16px; margin-bottom: 10px; }
+    .plan-nombre { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+    .plan-detalle { font-size: 13px; color: var(--ts); margin-bottom: 12px; line-height: 1.4; }
+    .plan-pbar-bg { background: var(--bg); border-radius: 99px; height: 6px; margin-bottom: 5px; }
+    .plan-pbar-fill { height: 100%; border-radius: 99px; background: var(--g); }
+    .plan-txt { font-size: 12px; color: var(--ts); }
+
+    /* ─── Documentos ──────────────────────────────────────────────────── */
+    .doc-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--bd); gap: 12px; }
+    .doc-row:last-child { border-bottom: none; }
+    .doc-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef1f8; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-nombre { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-fecha  { font-size: 12px; color: var(--ts); }
+    .doc-link { color: var(--p); text-decoration: none; font-size: 13px; font-weight: 600; flex-shrink: 0; padding: 4px 0; }
+
+    /* ─── Novedades ──────────────────────────────────────────────────── */
+    .novedad { border-left: 3px solid var(--g); padding: 12px 14px; margin-bottom: 10px; background: #f4faf8; border-radius: 0 11px 11px 0; }
+    .novedad h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .novedad p  { font-size: 13px; color: var(--ts); line-height: 1.4; }
+    .novedad-date { font-size: 11px; color: var(--ts); margin-top: 6px; }
+
+    /* ─── Alertas Drawer ─────────────────────────────────────────────── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; }
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 85%; max-width: 380px;
+      background: var(--wh); z-index: 201;
+      overflow-y: auto; display: flex; flex-direction: column;
+      box-shadow: -4px 0 24px rgba(0,0,0,.14);
+    }
+    .drawer-head { padding: 20px; background: var(--p); color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .drawer-head h3 { font-size: 16px; font-weight: 600; }
+    .drawer-close { background: none; border: none; color: #fff; font-size: 26px; cursor: pointer; padding: 2px; line-height: 1; }
+    .drawer-body { flex: 1; padding: 16px; }
+    .alerta-row { display: flex; gap: 12px; padding: 13px; border-radius: 11px; margin-bottom: 8px; background: var(--bg); align-items: flex-start; }
+    .alerta-ico { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .alerta-txt { font-size: 13px; line-height: 1.5; }
+
+    /* ─── Modal ──────────────────────────────────────────────────────── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: flex; align-items: flex-end; justify-content: center; }
+    .modal { background: var(--wh); border-radius: 22px 22px 0 0; padding: 28px 24px 40px; width: 100%; max-width: 480px; }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .modal input {
+      width: 100%; padding: 14px 16px; border: 1.5px solid var(--bd);
+      border-radius: 12px; font-family: inherit; font-size: 15px;
+      outline: none; margin-bottom: 12px; background: var(--bg); color: var(--tx);
+    }
+    .modal input:focus { border-color: var(--p); background: var(--wh); }
+    .modal-btns { display: flex; gap: 10px; margin-top: 6px; }
+    .btn-sec {
+      flex: 1; padding: 14px; border: 1.5px solid var(--bd); border-radius: 12px;
+      background: var(--wh); font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; color: var(--tx);
+    }
+    .btn-pri {
+      flex: 2; padding: 14px; background: var(--p); color: #fff; border: none;
+      border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .btn-pri:disabled { opacity: .55; }
+
+    /* ─── WhatsApp FAB ────────────────────────────────────────────────── */
+    .wa-fab {
+      position: fixed; bottom: 24px; right: 20px;
+      width: 58px; height: 58px; background: #25d366; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; box-shadow: 0 4px 18px rgba(37,211,102,.45); z-index: 50;
+    }
+
+    /* ─── Loading / Skeleton ─────────────────────────────────────────── */
+    .loading-full { min-height: 100dvh; background: var(--p); display: flex; align-items: center; justify-content: center; }
+    .spinner { width: 38px; height: 38px; border: 3px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    .ske { background: linear-gradient(90deg,#e4e7ee 25%,#f0f2f7 50%,#e4e7ee 75%); background-size: 200% 100%; animation: ske 1.4s infinite; border-radius: 12px; }
+    @keyframes ske { to { background-position: -200% 0; } }
+
+    /* ─── Logo inline ────────────────────────────────────────────────── */
+    .logo-inline {
+      display: inline-flex; align-items: center; gap: 0;
+      background: var(--p); border-radius: 12px; padding: 8px 18px;
+      margin-bottom: 36px;
+    }
+    .logo-inline span { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .logo-inline em   { font-style: normal; color: var(--g); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react-classic">
+const { useState, useEffect, useRef } = React;
+
+const API  = "https://axenda-backend-production.up.railway.app";
+const WA   = "5493XXXXXXXXX"; // TODO: reemplazar con el número de WhatsApp de la contadora (ej: 5493415123456)
+const SKEY = "axenda_portal_v1";
+const VKEY = "axenda_alertas_vistas";
+
+// ── Utils ──────────────────────────────────────────────────────────────────────
+function $$(n) {
+  return new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",minimumFractionDigits:0}).format(n||0);
+}
+function fmtFecha(s) {
+  if (!s) return "";
+  try {
+    const d = new Date(s.includes("T") ? s : s + "T12:00:00");
+    return d.toLocaleDateString("es-AR",{day:"numeric",month:"long",year:"numeric"});
+  } catch { return s; }
+}
+const MESES_C = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const MESES_L = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+function mesCorto(m) { return MESES_C[(m-1)] || m; }
+function mesLargo(m) { return MESES_L[(m-1)] || m; }
+function diasHasta(s) {
+  if (!s) return null;
+  const d = new Date(s.includes("T") ? s : s + "T12:00:00");
+  return Math.ceil((d - new Date()) / 86400000);
+}
+function waUrl(txt="") { return `https://wa.me/${WA}?text=${encodeURIComponent(txt)}`; }
+function fmtCuit(v) {
+  const n = v.replace(/\D/g,"").slice(0,11);
+  if (n.length > 8) return `${n.slice(0,2)}-${n.slice(2,10)}-${n.slice(10)}`;
+  if (n.length > 2) return `${n.slice(0,2)}-${n.slice(2)}`;
+  return n;
+}
+
+// ── SVG Icons ──────────────────────────────────────────────────────────────────
+const IcoBell = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </svg>
+);
+const IcoUser = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+const IcoKey = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2 9 14"/><path d="m15 8 3 3"/>
+  </svg>
+);
+const IcoOut = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+);
+const IcoEye = ({ open }) => open ? (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+) : (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+const IcoWA = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+  </svg>
+);
+function IcoDoc({ tipo }) {
+  const t = (tipo||"").toLowerCase();
+  if (t.includes("pdf"))  return <span>📄</span>;
+  if (t.includes("imag")) return <span>🖼️</span>;
+  if (t.includes("xls"))  return <span>📊</span>;
+  if (t.includes("doc"))  return <span>📝</span>;
+  return <span>📎</span>;
+}
+
+// ── Screens ────────────────────────────────────────────────────────────────────
+function Cargando() {
+  return <div className="loading-full"><div className="spinner"/></div>;
+}
+
+function Inactivo({ nombre }) {
+  return (
+    <div className="inactive-page">
+      <div className="logo-inline"><span>AXENDA</span><em> CONTABLE</em></div>
+      <div className="inactive-icon">🔒</div>
+      <h2>Tu portal está pausado</h2>
+      <p>{nombre ? `Hola ${nombre}, tu acceso` : "Tu acceso"} está pausado temporalmente.<br/>Contactá a tu contadora para más información.</p>
+      <a href={waUrl("Hola! Quería consultar sobre mi portal de Axenda Contable.")} target="_blank" rel="noreferrer" className="btn-wa">
+        <IcoWA /> Contactar a Axenda Contable
+      </a>
+    </div>
+  );
+}
+
+function Login({ onLogin }) {
+  const [cuit, setCuit]     = useState("");
+  const [pwd, setPwd]       = useState("");
+  const [show, setShow]     = useState(false);
+  const [busy, setBusy]     = useState(false);
+  const [err, setErr]       = useState("");
+
+  async function submit(e) {
+    e.preventDefault();
+    const c = cuit.replace(/\D/g,"");
+    if (c.length !== 11) { setErr("Ingresá un CUIT válido de 11 dígitos"); return; }
+    if (!pwd)             { setErr("Ingresá tu contraseña"); return; }
+    setErr(""); setBusy(true);
+    try {
+      const r = await fetch(`${API}/portal/login`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cuit: c, password: pwd }),
+      });
+      const d = await r.json();
+      if (!d.ok) { setErr(d.error || "Credenciales incorrectas"); }
+      else {
+        const ses = { slug: d.slug, nombre: d.nombre, apellido: d.apellido, cuit: c, activo: d.activo, exp: Date.now() + 30*86400000 };
+        localStorage.setItem(SKEY, JSON.stringify(ses));
+        onLogin(ses);
+      }
+    } catch { setErr("Error de conexión. Intentá de nuevo."); }
+    setBusy(false);
+  }
+
+  return (
+    <div className="login-page">
+      <div className="login-logo">
+        <h1>AXENDA CONTABLE</h1>
+        <p>Portal del Cliente</p>
+      </div>
+      <div className="login-card">
+        {err && <div className="err-box">{err}</div>}
+        <form onSubmit={submit}>
+          <div className="field">
+            <label>CUIT</label>
+            <input type="text" inputMode="numeric" value={cuit} onChange={e=>setCuit(fmtCuit(e.target.value))} placeholder="20-12345678-9" autoComplete="username"/>
+          </div>
+          <div className="field">
+            <label>Contraseña</label>
+            <div className="pwd-wrap">
+              <input type={show?"text":"password"} value={pwd} onChange={e=>setPwd(e.target.value)} placeholder="••••••••" autoComplete="current-password"/>
+              <button type="button" className="eye-btn" onClick={()=>setShow(v=>!v)}><IcoEye open={show}/></button>
+            </div>
+          </div>
+          <button type="submit" className="btn-full" disabled={busy}>{busy ? "Ingresando…" : "Ingresar"}</button>
+        </form>
+      </div>
+      <p className="login-foot">
+        ¿Olvidaste tu contraseña?{" "}
+        <a href={waUrl("Hola! Olvidé mi contraseña del portal de Axenda Contable.")} target="_blank" rel="noreferrer">Contactá a Axenda Contable</a>
+      </p>
+    </div>
+  );
+}
+
+// ── Semáforo ────────────────────────────────────────────────────────────────────
+function Semaforo({ datos }) {
+  const { cliente, tope, total_fac, pct } = datos;
+  const pn = Math.min(pct * 100, 100);
+  const margen = tope - total_fac;
+  const hoy = new Date();
+  const corte = hoy.getMonth() < 6 ? new Date(hoy.getFullYear(), 6, 1) : new Date(hoy.getFullYear()+1, 0, 1);
+  const dias  = Math.ceil((corte - hoy) / 86400000);
+  const corteStr = corte.toLocaleDateString("es-AR",{day:"numeric",month:"long"});
+
+  let cl, estado, sub;
+  if (pct < 0.6) {
+    cl = "g"; estado = "EN ORDEN ✓";
+    sub = `Podés facturar ${$$(margen)} más hasta el corte`;
+  } else if (pct < 0.85) {
+    cl = "y"; estado = "ATENCIÓN ⚠️";
+    sub = `Te quedan ${$$(margen)} — ${dias} días al corte`;
+  } else {
+    cl = "r"; estado = "SUPERASTE EL LÍMITE ⛔";
+    sub = margen < 0
+      ? `Superaste el tope por ${$$(-margen)} — hablá con tu contadora`
+      : `Muy cerca del límite — te quedan ${$$(margen)}`;
+  }
+
+  return (
+    <div className={`semaforo ${cl}`}>
+      <div className="sem-estado">{estado}</div>
+      <div className="sem-sub">{sub}</div>
+      <div className="pbar-bg"><div className="pbar-fill" style={{width:`${pn}%`}}/></div>
+      <div className="sem-foot">
+        <span>Categoría {cliente.categoria || "?"} · {$$(total_fac)} / {$$(tope)}</span>
+        <span>Corte: {corteStr}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Cuota ───────────────────────────────────────────────────────────────────────
+function Cuota({ cliente, slug, onUpdate }) {
+  const [busy, setBusy] = useState(false);
+  const est = cliente.estado_pago;
+  const hoy = new Date();
+  const mes = mesLargo(hoy.getMonth()+1);
+
+  async function yaPague() {
+    setBusy(true);
+    try {
+      const r = await fetch(`${API}/clientes/${slug}/estado-pago`, {
+        method:"PATCH", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({estado_pago:"al_dia"}),
+      });
+      if (r.ok) onUpdate({...cliente, estado_pago:"al_dia"});
+    } catch {}
+    setBusy(false);
+  }
+
+  const chipCl  = est === "al_dia" ? "g" : est === "vencida" ? "r" : "y";
+  const chipTxt = est === "al_dia" ? "Al día" : est === "vencida" ? "Vencida" : "Pendiente";
+
+  return (
+    <div className="card">
+      <div className="card-label">Tu cuota — {mes} {hoy.getFullYear()}</div>
+      {cliente.cuota
+        ? <div className="cuota-monto">{$$(cliente.cuota)}</div>
+        : <div style={{fontSize:14,color:"var(--ts)",marginBottom:8}}>Consultá el monto con tu contadora</div>
+      }
+      <span className={`chip ${chipCl}`}>{chipTxt}</span>
+      <div className="cuota-vence">Vence el 20 de {mes}</div>
+      {(est === "debe" || est === "vencida") && (
+        <button className="btn-pago" onClick={yaPague} disabled={busy}>
+          {busy ? "Actualizando…" : "✓ Ya pagué"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Deuda ───────────────────────────────────────────────────────────────────────
+function Deuda({ cliente }) {
+  const m = cliente.deuda_monto;
+  if (!m || m <= 0) return null;
+  return (
+    <div className="deuda-card">
+      <div className="card-label" style={{color:"var(--r)"}}>Deuda con ARCA</div>
+      <div className="deuda-monto">{$$(m)}</div>
+      {cliente.deuda_descripcion && <div className="deuda-desc">{cliente.deuda_descripcion}</div>}
+      <a href={waUrl(`Hola! Quiero consultar sobre la deuda con ARCA de ${$$(m)}.`)} target="_blank" rel="noreferrer" className="btn-contact">
+        💬 Contactar a mi contadora
+      </a>
+    </div>
+  );
+}
+
+// ── Facturación ──────────────────────────────────────────────────────────────────
+function Facturacion({ fac, tope }) {
+  if (!fac || fac.length === 0) return null;
+  const sorted = [...fac].sort((a,b) => a.anio!==b.anio ? a.anio-b.anio : a.mes-b.mes).slice(-12);
+  if (sorted.length === 0) return null;
+
+  const total  = sorted.reduce((s,f) => s + (f.monto||0), 0);
+  const ultimo = sorted[sorted.length-1];
+  const maxM   = Math.max(...sorted.map(f=>f.monto||0), tope/12 || 1);
+
+  const barW  = 44;
+  const gap   = 6;
+  const W     = sorted.length * (barW + gap);
+  const H     = 100;
+  const barH  = 78;
+
+  return (
+    <div className="card">
+      <div className="card-label">Tu facturación</div>
+      <div className="fac-total">{$$(total)}</div>
+      <div className="fac-sub">Último dato: {mesCorto(ultimo.mes)} {ultimo.anio}</div>
+      <div className="chart-scroll">
+        <svg width={W} height={H+24} style={{display:"block"}}>
+          {tope > 0 && (() => {
+            const ly = H - (tope/12/maxM) * barH;
+            return ly > 0 && ly < H ? <line x1={0} y1={ly} x2={W} y2={ly} stroke="var(--r)" strokeWidth={1} strokeDasharray="4,3" opacity={.5}/> : null;
+          })()}
+          {sorted.map((f,i) => {
+            const h = Math.max(4, ((f.monto||0)/maxM)*barH);
+            const x = i*(barW+gap);
+            const y = H - h;
+            const fill = (f.monto||0) > tope/12 ? "var(--r)" : "var(--p)";
+            return (
+              <g key={`${f.anio}-${f.mes}`}>
+                <rect x={x} y={y} width={barW} height={h} rx={5} fill={fill} opacity={.82}/>
+                <text x={x+barW/2} y={H+18} textAnchor="middle" fontSize={10} fill="var(--ts)">{mesCorto(f.mes)}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      {tope > 0 && (
+        <div style={{fontSize:11,color:"var(--ts)",marginTop:10}}>
+          <span style={{color:"var(--r)",fontWeight:600}}>— —</span>&nbsp;Ref. mensual sugerida ({$$(Math.round(tope/12))}/mes)
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Planes ──────────────────────────────────────────────────────────────────────
+function Planes({ planes }) {
+  const activos = (planes||[]).filter(p => p.estado === "activo");
+  if (activos.length === 0) return null;
+  return (
+    <div className="card">
+      <div className="card-label">Tus planes de pago</div>
+      {activos.map(p => {
+        const total = p.total_cuotas || 0;
+        const pagas = p.cuotas_pagas || 0;
+        const pct   = total > 0 ? pagas/total*100 : 0;
+        const dias  = p.proximo_venc ? diasHasta(p.proximo_venc) : null;
+        const dColor = dias !== null ? (dias <= 5 ? "var(--r)" : dias <= 10 ? "var(--y)" : "var(--g)") : "";
+        return (
+          <div key={p.id} className="plan-item">
+            <div className="plan-nombre">{p.numero_plan ? `Plan ${p.numero_plan}` : p.organismo}</div>
+            <div className="plan-detalle">
+              {p.numero_plan && p.organismo && <span>{p.organismo} · </span>}
+              {p.proximo_venc && <>Próx. venc: {fmtFecha(p.proximo_venc)}</>}
+              {p.monto_primer_venc && <> · {$$(p.monto_primer_venc)}</>}
+              {dias !== null && <strong style={{color:dColor,marginLeft:6}}>({dias}d)</strong>}
+            </div>
+            <div className="plan-pbar-bg"><div className="plan-pbar-fill" style={{width:`${pct}%`}}/></div>
+            <div className="plan-txt">{pagas} de {total} cuotas pagas · {Math.round(pct)}%</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Documentos ──────────────────────────────────────────────────────────────────
+function Docs({ docs, cuit }) {
+  return (
+    <div className="card">
+      <div className="card-label">Tus documentos</div>
+      <div className="doc-row">
+        <div className="doc-ico">🏛️</div>
+        <div className="doc-info">
+          <div className="doc-nombre">Constancia de inscripción</div>
+          <div className="doc-fecha">ARCA · Monotributo</div>
+        </div>
+        <a href={`https://serviciosweb.afip.gob.ar/crs/publico/constanciaAFIP.aspx?cuit=${cuit}`} target="_blank" rel="noreferrer" className="doc-link">Ver</a>
+      </div>
+      {(docs||[]).map(d => (
+        <div key={d.id} className="doc-row">
+          <div className="doc-ico"><IcoDoc tipo={d.tipo}/></div>
+          <div className="doc-info">
+            <div className="doc-nombre">{d.nombre}</div>
+            <div className="doc-fecha">{d.fecha ? fmtFecha(d.fecha) : ""}</div>
+          </div>
+          {d.url && <a href={d.url} target="_blank" rel="noreferrer" className="doc-link">Descargar</a>}
+        </div>
+      ))}
+      {(!docs || docs.length === 0) && (
+        <div style={{fontSize:14,color:"var(--ts)",paddingTop:10}}>No hay documentos cargados aún</div>
+      )}
+    </div>
+  );
+}
+
+// ── Novedades ───────────────────────────────────────────────────────────────────
+function Novedades({ novedades }) {
+  if (!novedades || novedades.length === 0) return null;
+  return (
+    <div className="card">
+      <div className="card-label">Novedades de Axenda Contable</div>
+      {novedades.map(n => (
+        <div key={n.id} className="novedad">
+          <h4>{n.titulo}</h4>
+          {n.contenido && <p>{n.contenido}</p>}
+          {n.created_at && <div className="novedad-date">{fmtFecha(n.created_at)}</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Generador de alertas ────────────────────────────────────────────────────────
+function generarAlertas(datos) {
+  const { cliente, pct, planes } = datos;
+  const pn = pct * 100;
+  const al = [];
+
+  if (pn >= 85)
+    al.push({ id:"tope85", ico:"🔴", txt:`Superaste el 85% de tu límite de facturación (${Math.round(pn)}%)` });
+  else if (pn >= 60)
+    al.push({ id:"tope60", ico:"🟡", txt:`Llevás el ${Math.round(pn)}% de tu límite de facturación` });
+
+  if (cliente.estado_pago === "vencida")
+    al.push({ id:"cuota_v", ico:"🔴", txt:"Tu cuota mensual está vencida" });
+  else if (cliente.estado_pago === "debe") {
+    const dia = new Date().getDate();
+    if (dia >= 15) al.push({ id:"cuota_d", ico:"🟡", txt:`Tu cuota vence en ${20-dia} días` });
+  }
+
+  (planes||[]).filter(p => p.estado==="activo" && p.proximo_venc).forEach(p => {
+    const d = diasHasta(p.proximo_venc);
+    if (d !== null && d >= 0 && d <= 7)
+      al.push({ id:`plan_${p.id}`, ico:"📋", txt:`Cuota del plan ${p.numero_plan||p.organismo} vence ${d===0?"hoy":`en ${d} días`}` });
+  });
+
+  return al;
+}
+
+// ── Panel Alertas ───────────────────────────────────────────────────────────────
+function Alertas({ datos, onClose }) {
+  const al = generarAlertas(datos);
+
+  useEffect(() => {
+    const ids = al.map(a=>a.id);
+    try {
+      const prev = new Set(JSON.parse(localStorage.getItem(VKEY)||"[]"));
+      ids.forEach(id => prev.add(id));
+      localStorage.setItem(VKEY, JSON.stringify([...prev]));
+    } catch {}
+  }, []);
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose}/>
+      <div className="drawer">
+        <div className="drawer-head">
+          <h3>🔔 Notificaciones</h3>
+          <button className="drawer-close" onClick={onClose}>×</button>
+        </div>
+        <div className="drawer-body">
+          {al.length === 0
+            ? <div style={{textAlign:"center",padding:"50px 0",color:"var(--ts)"}}>
+                <div style={{fontSize:48,marginBottom:12}}>✅</div>
+                <p>Sin alertas pendientes</p>
+              </div>
+            : al.map(a => (
+                <div key={a.id} className="alerta-row">
+                  <div className="alerta-ico">{a.ico}</div>
+                  <div className="alerta-txt">{a.txt}</div>
+                </div>
+              ))
+          }
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Modal Cambiar Password ──────────────────────────────────────────────────────
+function CambiarPwd({ cuit, onClose }) {
+  const [f, setF] = useState({ actual:"", nueva:"", conf:"" });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr]   = useState("");
+  const [ok, setOk]     = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (f.nueva !== f.conf) { setErr("Las contraseñas no coinciden"); return; }
+    if (f.nueva.length < 6) { setErr("La contraseña debe tener al menos 6 caracteres"); return; }
+    setErr(""); setBusy(true);
+    try {
+      const r = await fetch(`${API}/portal/cambiar-password`, {
+        method:"PATCH", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ cuit, password_actual: f.actual, password_nueva: f.nueva }),
+      });
+      const d = await r.json();
+      if (d.ok) setOk(true);
+      else setErr(d.error || "Error al cambiar contraseña");
+    } catch { setErr("Error de conexión"); }
+    setBusy(false);
+  }
+
+  return (
+    <div className="modal-bg" onClick={e => e.target===e.currentTarget && onClose()}>
+      <div className="modal">
+        {ok ? (
+          <div style={{textAlign:"center",padding:"10px 0 4px"}}>
+            <div style={{fontSize:50,marginBottom:14}}>✅</div>
+            <div style={{fontSize:18,fontWeight:700,marginBottom:8}}>¡Contraseña actualizada!</div>
+            <div style={{color:"var(--ts)",marginBottom:24,fontSize:14}}>Tu contraseña se cambió correctamente</div>
+            <button className="btn-pri" style={{width:"100%"}} onClick={onClose}>Cerrar</button>
+          </div>
+        ) : (
+          <>
+            <h3>Cambiar contraseña</h3>
+            {err && <div className="err-box">{err}</div>}
+            <form onSubmit={submit}>
+              <input type="password" placeholder="Contraseña actual" value={f.actual} onChange={e=>setF(v=>({...v,actual:e.target.value}))} autoComplete="current-password"/>
+              <input type="password" placeholder="Nueva contraseña" value={f.nueva} onChange={e=>setF(v=>({...v,nueva:e.target.value}))} autoComplete="new-password"/>
+              <input type="password" placeholder="Confirmar nueva contraseña" value={f.conf} onChange={e=>setF(v=>({...v,conf:e.target.value}))} autoComplete="new-password"/>
+              <div className="modal-btns">
+                <button type="button" className="btn-sec" onClick={onClose}>Cancelar</button>
+                <button type="submit" className="btn-pri" disabled={busy}>{busy?"Guardando…":"Cambiar"}</button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Portal Principal ────────────────────────────────────────────────────────────
+function Portal({ ses, onLogout }) {
+  const [datos,   setDatos]   = useState(null);
+  const [cliLoc,  setCliLoc]  = useState(null);
+  const [busy,    setBusy]    = useState(true);
+  const [err,     setErr]     = useState("");
+  const [drawer,  setDrawer]  = useState(false);
+  const [pwdMod,  setPwdMod]  = useState(false);
+  const [menu,    setMenu]    = useState(false);
+  const menuRef = useRef(null);
+
+  async function cargar() {
+    setBusy(true); setErr("");
+    try {
+      const r = await fetch(`${API}/portal/${ses.slug}`);
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      if (d.cliente && !d.cliente.activo) {
+        onLogout();
+        return;
+      }
+      setDatos(d); setCliLoc(d.cliente);
+    } catch { setErr("No se pudieron cargar tus datos."); }
+    setBusy(false);
+  }
+
+  useEffect(() => { cargar(); }, []);
+
+  useEffect(() => {
+    function h(e) { if (menuRef.current && !menuRef.current.contains(e.target)) setMenu(false); }
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const alertasNoVistas = datos ? (() => {
+    const al = generarAlertas({...datos, cliente: cliLoc||datos.cliente});
+    try {
+      const v = new Set(JSON.parse(localStorage.getItem(VKEY)||"[]"));
+      return al.filter(a => !v.has(a.id)).length;
+    } catch { return al.length; }
+  })() : 0;
+
+  return (
+    <>
+      <div className="header">
+        <div className="header-logo">AXENDA<em> •</em></div>
+        <div className="header-right">
+          {ses.nombre && <span className="header-nombre">{ses.nombre}</span>}
+          <button className="icon-btn" onClick={()=>setDrawer(true)} title="Notificaciones">
+            <IcoBell/>
+            {alertasNoVistas > 0 && <span className="badge">{alertasNoVistas}</span>}
+          </button>
+          <div className="profile-rel" ref={menuRef}>
+            <button className="icon-btn" onClick={()=>setMenu(v=>!v)} title="Perfil">
+              <IcoUser/>
+            </button>
+            {menu && (
+              <div className="profile-dropdown">
+                <button onClick={()=>{setPwdMod(true);setMenu(false);}}><IcoKey/> Cambiar contraseña</button>
+                <button className="red" onClick={onLogout}><IcoOut/> Cerrar sesión</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="main">
+        {busy && (
+          <>
+            <div className="ske" style={{height:160,marginBottom:12}}/>
+            <div className="ske" style={{height:120,marginBottom:12}}/>
+            <div className="ske" style={{height:200,marginBottom:12}}/>
+          </>
+        )}
+        {!busy && err && (
+          <div style={{textAlign:"center",padding:"70px 0"}}>
+            <div style={{fontSize:48,marginBottom:14}}>⚠️</div>
+            <div style={{color:"var(--ts)",marginBottom:20,fontSize:15}}>{err}</div>
+            <button className="btn-full" style={{width:"auto",padding:"12px 28px"}} onClick={cargar}>Reintentar</button>
+          </div>
+        )}
+        {!busy && datos && cliLoc && (
+          <>
+            <Semaforo   datos={{...datos, cliente: cliLoc}}/>
+            <Cuota      cliente={cliLoc} slug={ses.slug} onUpdate={setCliLoc}/>
+            <Deuda      cliente={cliLoc}/>
+            <Facturacion fac={datos.facturacion} tope={datos.tope}/>
+            <Planes     planes={datos.planes}/>
+            <Docs       docs={datos.documentos} cuit={ses.cuit}/>
+            <Novedades  novedades={datos.novedades}/>
+          </>
+        )}
+      </div>
+
+      <a href={waUrl("Hola! Te contacto desde el portal de Axenda Contable.")} target="_blank" rel="noreferrer" className="wa-fab" title="WhatsApp">
+        <IcoWA/>
+      </a>
+
+      {drawer && datos && (
+        <Alertas datos={{...datos, cliente: cliLoc||datos.cliente}} onClose={()=>setDrawer(false)}/>
+      )}
+      {pwdMod && <CambiarPwd cuit={ses.cuit} onClose={()=>setPwdMod(false)}/>}
+    </>
+  );
+}
+
+// ── App ─────────────────────────────────────────────────────────────────────────
+function App() {
+  const [ses, setSes]     = useState(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(SKEY)||"null");
+      if (s && s.exp > Date.now()) setSes(s);
+      else if (s) localStorage.removeItem(SKEY);
+    } catch {}
+    setReady(true);
+  }, []);
+
+  function logout() { localStorage.removeItem(SKEY); setSes(null); }
+  function login(s) { setSes(s); }
+
+  if (!ready) return <Cargando/>;
+  if (!ses)   return <Login onLogin={login}/>;
+  if (ses.activo === false) return <Inactivo nombre={ses.nombre}/>;
+  return <Portal ses={ses} onLogout={logout}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
