@@ -184,12 +184,14 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .bar-red    { background:linear-gradient(90deg,#E04545,#C83030); }
 
 /* ── CHART ── */
-.chart-wrap { position:relative; height:130px; margin-top:6px; }
-svg.chart { width:100%; height:100%; }
+.chart-wrap { position:relative; height:140px; margin-top:6px; }
+.chart-wrap svg { width:100%; height:100%; overflow:visible; }
 .chart-legend { display:flex; gap:14px; margin-top:8px; }
 .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
 .legend-dot  { width:8px; height:8px; border-radius:50%; }
-.proj-warning { margin-top:14px; padding:10px 12px; border-radius:8px; }
+.proj-warning { margin-top:10px; padding:9px 12px; border-radius:8px; font-size:12px; }
+/* ── DÍAS CORTE EN SEMÁFORO ── */
+.sem-dias-row { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding:9px 14px; background:var(--light); border-radius:9px; border:1px solid var(--border); }
 
 /* ── STATS ── */
 .stat-val { font-size:26px; font-weight:300; font-family:'DM Mono',monospace; letter-spacing:-.01em; line-height:1.1; margin:6px 0 4px; }
@@ -397,7 +399,7 @@ svg.chart { width:100%; height:100%; }
 
   <main class="main">
     <div class="topbar">
-      <div class="topbar-title">Panel general</div>
+      <div class="topbar-title" id="topbar-title">Portal</div>
       <div class="topbar-right">
         <div id="topbar-badge" class="badge-alert">
           <span>⚠</span> <span id="badge-text">Cargando...</span>
@@ -474,52 +476,23 @@ svg.chart { width:100%; height:100%; }
               </div>
               <div class="bar-track"><div class="bar-fill bar-green" style="width:100%;opacity:.2"></div></div>
             </div>
+          <div class="sem-dias-row">
+            <span style="font-size:12px;color:var(--muted)">Próximo corte · <strong id="sem-corte-nom" style="color:var(--text)">—</strong></span>
+            <span style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace" id="sem-dias-num">— días</span>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-label">Proyección al próximo corte</div>
+          <div class="card-label">Facturación mensual</div>
           <div class="chart-wrap">
-            <svg class="chart" viewBox="0 0 260 100" preserveAspectRatio="none" id="chart-svg">
-              <line x1="0" y1="20" x2="260" y2="20" stroke="#DDE3EE" stroke-width=".5"/>
-              <line x1="0" y1="50" x2="260" y2="50" stroke="#DDE3EE" stroke-width=".5"/>
-              <line x1="0" y1="80" x2="260" y2="80" stroke="#DDE3EE" stroke-width=".5"/>
-              <line id="chart-tope-line" x1="0" y1="14" x2="260" y2="14" stroke="#E04545" stroke-width="1" stroke-dasharray="4,3"/>
-              <text x="4" y="11" font-family="DM Mono,monospace" font-size="6" fill="#E04545" id="chart-tope-txt">Tope</text>
-              <path id="chart-area" d="" fill="url(#cg)" opacity=".2"/>
-              <polyline id="chart-real" points="" fill="none" stroke="#2BAF82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <polyline id="chart-proj" points="" fill="none" stroke="#E8A020" stroke-width="2" stroke-dasharray="4,3" stroke-linecap="round"/>
-              <line id="chart-today-line" x1="0" y1="10" x2="0" y2="90" stroke="#E8A02066" stroke-width="1"/>
-              <circle id="chart-today-dot" cx="0" cy="0" r="3" fill="#E8A020"/>
-              <text id="chart-m1" x="0"   y="98" font-family="DM Mono,monospace" font-size="6" fill="#6B7A96"/>
-              <text id="chart-m2" x="52"  y="98" font-family="DM Mono,monospace" font-size="6" fill="#6B7A96"/>
-              <text id="chart-m3" x="104" y="98" font-family="DM Mono,monospace" font-size="6" fill="#6B7A96"/>
-              <text id="chart-m4" x="156" y="98" font-family="DM Mono,monospace" font-size="6" fill="#6B7A96"/>
-              <text id="chart-m5" x="208" y="98" font-family="DM Mono,monospace" font-size="6" fill="#6B7A96"/>
-              <defs>
-                <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#2BAF82"/>
-                  <stop offset="100%" stop-color="#2BAF8200"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <svg id="bar-chart-svg" viewBox="0 0 260 108" preserveAspectRatio="none"></svg>
           </div>
           <div class="chart-legend">
             <div class="legend-item"><div class="legend-dot" style="background:#2BAF82"></div>Facturado</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#E8A020"></div>Proyectado</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#E04545"></div>Límite</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#E04545"></div>Por encima del límite</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#E8A020;border-radius:0;height:2px;width:16px"></div>Límite mensual</div>
           </div>
           <div class="proj-warning" id="proj-warning"></div>
-        </div>
-      </div>
-
-      <!-- DEUDA (oculta si no hay) -->
-      <div id="deuda-section" style="margin-bottom:20px;display:none">
-        <div class="card deuda-card">
-          <div class="card-label" style="color:var(--red)">Deuda con ARCA</div>
-          <div class="deuda-monto" id="deuda-monto">$—</div>
-          <div style="font-size:13px;color:var(--muted)" id="deuda-desc"></div>
-          <a class="btn-contactar" id="wa-deuda" href="#" target="_blank" rel="noreferrer">💬 Contactar a tu contador</a>
         </div>
       </div>
 
@@ -539,10 +512,11 @@ svg.chart { width:100%; height:100%; }
           <div class="stat-badge sbadge-up" id="stat-prom-badge">—</div>
         </div>
         <div class="card">
-          <div class="card-label">Días para el próximo corte</div>
-          <div class="stat-val" id="stat-dias" style="color:var(--yellow)">—<span style="font-size:15px;color:var(--muted)"> días</span></div>
-          <div class="stat-sub" id="stat-dias-sub">—</div>
-          <div class="stat-badge sbadge-warn" id="stat-dias-badge">—</div>
+          <div class="card-label">Deuda con ARCA</div>
+          <div class="stat-val" id="stat-deuda" style="color:var(--green)">$0</div>
+          <div class="stat-sub" id="stat-deuda-sub">Sin deuda registrada</div>
+          <div class="stat-badge sbadge-up" id="stat-deuda-badge">✓ Sin deuda</div>
+          <a class="btn-contactar" id="wa-deuda" href="#" target="_blank" rel="noreferrer" style="display:none;margin-top:10px">💬 Contactar a tu contador</a>
         </div>
       </div>
 
@@ -639,7 +613,7 @@ svg.chart { width:100%; height:100%; }
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────────────────────
 const API  = "https://axenda-backend-production.up.railway.app";
-const WA   = "549XXXXXXXXX"; // TODO: reemplazar con tu número (ej: 5493415123456)
+let WA = "549XXXXXXXXX"; // Se sobreescribe con el valor de configuracion.whatsapp del backend
 const SKEY = "axenda_portal_v1";
 const VKEY = "axenda_alertas_vistas";
 
@@ -828,15 +802,15 @@ function renderPortal() {
   document.getElementById("sb-corte").textContent  = "Corte " + corte.nombre;
   renderSbEstado();
 
-  // WA links
+  // WA: usar número del backend si está disponible
+  if (DATOS.whatsapp) WA = DATOS.whatsapp;
   const waBase = waUrl("Hola! Te contacto desde el portal de Axenda Contable.");
-  document.getElementById("wa-fab").href     = waBase;
+  document.getElementById("wa-fab").href      = waBase;
   document.getElementById("wa-inactive").href = waUrl("Hola! Consulto sobre mi acceso al portal de Axenda Contable.");
-  document.getElementById("wa-forgot").href  = waUrl("Hola! Olvidé mi contraseña del portal de Axenda Contable.");
-  document.getElementById("wa-deuda").href   = waUrl(`Hola! Consulto sobre la deuda con ARCA de ${$$(CLIENTE.deuda_monto)}.`);
+  document.getElementById("wa-forgot").href   = waUrl("Hola! Olvidé mi contraseña del portal de Axenda Contable.");
 
   // Topbar
-  document.getElementById("topbar-fecha").textContent = `${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · Corte ${corte.nombre}`;
+  document.getElementById("topbar-fecha").textContent = `${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
   const badgeEl = document.getElementById("topbar-badge");
   document.getElementById("badge-text").textContent = pct<0.6 ? "✓ En orden" : pct<0.85 ? `⚠ ${corte.dias}d al corte` : "🔴 Al límite";
   badgeEl.className = semClass==="badge-verde" ? "badge-ok" : semClass==="badge-amarillo" ? "badge-alert" : "badge-danger";
@@ -846,8 +820,11 @@ function renderPortal() {
   const badgeSem = document.getElementById("semaforo-badge");
   badgeSem.className = `semaforo-badge ${semClass}`;
   badgeSem.innerHTML = `<div class="dot"></div> ${semLabel}`;
+  // Topbar con nombre del cliente
+  document.getElementById("topbar-title").textContent = nom ? `Hola, ${nom}` : "Mi Portal";
+
   renderGauge(pct, semColor);
-  document.getElementById("gauge-desc").textContent = `del límite anual · ${corte.dias}d al corte`;
+  document.getElementById("gauge-desc").textContent = `del límite anual Cat. ${cat}`;
   document.getElementById("prog-facturado").textContent = $$(total_fac);
   document.getElementById("prog-margen").textContent    = $$(margen);
   document.getElementById("prog-margen-label").textContent = `Margen restante Cat. ${cat}`;
@@ -856,44 +833,53 @@ function renderPortal() {
   document.getElementById("bar-facturado").style.width = Math.min(pct*100,100)+"%";
   document.getElementById("bar-facturado").className   = `bar-fill ${pct<0.6?"bar-green":pct<0.85?"bar-yellow":"bar-red"}`;
   document.getElementById("bar-margen").style.width    = Math.min((margen/tope)*100,100)+"%";
+  // Días al corte dentro del semáforo
+  document.getElementById("sem-corte-nom").textContent = corte.nombre;
+  const diasCol = corte.dias<=15?"var(--red)":corte.dias<=45?"var(--yellow)":"var(--green)";
+  const semDiasEl = document.getElementById("sem-dias-num");
+  semDiasEl.textContent = corte.dias + " días";
+  semDiasEl.style.color = diasCol;
 
-  // Proyección chart
+  // Gráfico barras mensuales
   const fac6 = (facturacion||[]).sort((a,b)=>a.anio!==b.anio?a.anio-b.anio:a.mes-b.mes).slice(-6);
-  const prev  = (facturacion||[]).slice(0, -6).reduce((s,f)=>s+(f.monto||0), 0);
-  let acum=prev;
-  let ultimoReal=0;
-  const acumulados = fac6.map((f,i) => { acum+=(f.monto||0); if(f.monto>0) ultimoReal=i; return acum; });
-  renderChart(acumulados, tope, ultimoReal, promedio);
+  const mesesRestantes = Math.max(Math.ceil(corte.dias/30), 1);
+  const limiteMensual  = tope > 0 ? Math.max((tope - total_fac) / mesesRestantes, 0) : 0;
+  renderBarChart(fac6, limiteMensual, hoy);
 
-  const proyFinal = total_fac + promedio * Math.max(Math.ceil(corte.dias/30), 0);
   const warnEl = document.getElementById("proj-warning");
-  if (proyFinal > tope) {
+  const mesActualMonto = fac6.find(f=>f.mes===(hoy.getMonth()+1)&&f.anio===hoy.getFullYear());
+  const mesAct = mesActualMonto ? (mesActualMonto.monto||0) : 0;
+  if (limiteMensual > 0 && mesAct > limiteMensual) {
     warnEl.className="proj-warning alerta-yellow";
-    warnEl.innerHTML=`<div style="font-size:12px;color:var(--yellow);font-weight:600;margin-bottom:3px">⚠ Proyección: superarías el tope</div><div style="font-size:12px;color:var(--muted);line-height:1.5">Al ritmo actual llegarías a ${$$(proyFinal)} al corte. Hablá con tu contador.</div>`;
-  } else {
+    warnEl.innerHTML=`<span style="color:var(--yellow);font-weight:600">⚠ Este mes superás el límite mensual</span> — Límite: ${$$(limiteMensual)}/mes para no recategorizarte`;
+  } else if (limiteMensual > 0) {
     warnEl.className="proj-warning alerta-green";
-    warnEl.innerHTML=`<div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:3px">✓ Proyección dentro del límite</div><div style="font-size:12px;color:var(--muted);line-height:1.5">Estimado al corte: ${$$(proyFinal)} de ${$$(tope)} posibles.</div>`;
+    warnEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ Dentro del límite mensual</span> — Podés facturar hasta ${$$(limiteMensual)} este mes sin recategorización`;
+  } else { warnEl.innerHTML=""; }
+
+  // Deuda en stat card
+  const deudaMonto = CLIENTE.deuda_monto || 0;
+  const deudaEl = document.getElementById("stat-deuda");
+  deudaEl.textContent = $$(deudaMonto);
+  deudaEl.style.color = deudaMonto > 0 ? "var(--red)" : "var(--green)";
+  document.getElementById("stat-deuda-sub").textContent = deudaMonto > 0 ? (CLIENTE.deuda_descripcion || "Pendiente de regularización") : "Sin deuda registrada";
+  const deudaBadge = document.getElementById("stat-deuda-badge");
+  const waDeudaBtn = document.getElementById("wa-deuda");
+  if (deudaMonto > 0) {
+    deudaBadge.textContent="⚠ Requiere atención"; deudaBadge.className="stat-badge sbadge-danger";
+    waDeudaBtn.style.display = "inline-block";
+    waDeudaBtn.href = waUrl(`Hola! Consulto sobre la deuda con ARCA de ${$$(deudaMonto)}.`);
+  } else {
+    deudaBadge.textContent="✓ Sin deuda"; deudaBadge.className="stat-badge sbadge-up";
+    waDeudaBtn.style.display = "none";
   }
 
-  // Deuda
-  if (CLIENTE.deuda_monto > 0) {
-    document.getElementById("deuda-section").style.display = "block";
-    document.getElementById("deuda-monto").textContent = $$(CLIENTE.deuda_monto);
-    if (CLIENTE.deuda_descripcion) document.getElementById("deuda-desc").textContent = CLIENTE.deuda_descripcion;
-  }
-
-  // Stats
+  // Stats cuota / total
   document.getElementById("stat-cuota").textContent    = CLIENTE.cuota ? $$(CLIENTE.cuota) : "$—";
   document.getElementById("stat-cuota-sub").textContent = `Vence el 20 de ${MESES_FULL[hoy.getMonth()]} ${hoy.getFullYear()}`;
   renderStatCuotaBadge(CLIENTE.estado_pago);
   document.getElementById("stat-total").textContent    = $$(total_fac);
   document.getElementById("stat-prom-badge").textContent = `${mesesCargados} mes${mesesCargados!==1?"es":""} · prom. ${$$(promedio)}/mes`;
-  document.getElementById("stat-dias").innerHTML = `${corte.dias}<span style="font-size:15px;color:var(--muted)"> días</span>`;
-  document.getElementById("stat-dias-sub").textContent  = `Corte: 1 ${corte.nombre}`;
-  const dbadge = document.getElementById("stat-dias-badge");
-  if (corte.dias>60) { dbadge.textContent="✓ Tiempo suficiente"; dbadge.className="stat-badge sbadge-up"; }
-  else if (corte.dias>30) { dbadge.textContent="⚠ Atención requerida"; dbadge.className="stat-badge sbadge-warn"; }
-  else { dbadge.textContent="🔴 Urgente"; dbadge.className="stat-badge sbadge-danger"; }
 
   // Alertas
   ALERTAS_GENERADAS = generarAlertas(pct, corte, total_fac, tope, CLIENTE, planes);
@@ -988,39 +974,62 @@ function renderGauge(pct, color) {
   document.getElementById("gauge-pct-big").style.color = color;
 }
 
-// ── CHART ──────────────────────────────────────────────────────────────────────
-function renderChart(data6, tope, hoyIdx, promedio) {
-  const max = Math.max(tope*1.15, ...(data6.map(d=>d||0)), 1);
-  const toY = v => Math.round(90-(v/max)*76);
-  const toX = i => Math.round(i*52);
-  const hoy = new Date();
-  const labels = [];
-  for(let i=0;i<5;i++){
-    const d = new Date(hoy.getFullYear(), hoy.getMonth()-4+i, 1);
-    labels.push(MESES[d.getMonth()]);
+// ── CHART BARRAS MENSUALES ─────────────────────────────────────────────────────
+function renderBarChart(fac6, limiteMensual, hoy) {
+  const svg = document.getElementById("bar-chart-svg");
+  if (!svg) return;
+  const montos = fac6.map(f => f.monto || 0);
+  const max    = Math.max(...montos, limiteMensual, 1) * 1.18;
+  const CHART_H = 88, CHART_TOP = 10;
+  const toY = v => Math.round(CHART_H - (v/max)*(CHART_H-CHART_TOP) + CHART_TOP);
+  const BAR_W = 30, SLOT = 260/6, PAD = (SLOT-BAR_W)/2;
+  const mesHoy = hoy.getMonth()+1, añoHoy = hoy.getFullYear();
+
+  let html = '';
+
+  // Grid lines
+  [0.33,0.66,1].forEach(t => {
+    const y = toY(max * t);
+    html += `<line x1="0" y1="${y}" x2="260" y2="${y}" stroke="#DDE3EE" stroke-width=".5" stroke-dasharray="3,2"/>`;
+  });
+
+  // Línea punteada del límite mensual
+  if (limiteMensual > 0) {
+    const ly = toY(limiteMensual);
+    html += `<line x1="0" y1="${ly}" x2="260" y2="${ly}" stroke="#E8A020" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+    html += `<text x="3" y="${ly-3}" font-family="DM Mono,monospace" font-size="6" fill="#E8A020">límite</text>`;
   }
-  ["chart-m1","chart-m2","chart-m3","chart-m4","chart-m5"].forEach((id,i) => {
-    document.getElementById(id).textContent = labels[i]||"";
+
+  // Barras
+  fac6.forEach((f, i) => {
+    const x = i*SLOT + PAD;
+    const v = f.monto || 0;
+    const barH = v > 0 ? Math.max((v/max)*(CHART_H-CHART_TOP), 2) : 0;
+    const barY = CHART_H - barH + CHART_TOP;
+    const isFuture = (f.anio > añoHoy) || (f.anio === añoHoy && f.mes > mesHoy);
+    const isThisMonth = f.mes === mesHoy && f.anio === añoHoy;
+    const overLimit = limiteMensual > 0 && v > limiteMensual;
+    const barColor = isFuture ? '#CBD5E1' : overLimit ? '#E04545' : '#2BAF82';
+    const opacity  = isFuture ? '0.35' : isThisMonth ? '1' : '0.75';
+
+    if (barH > 0) {
+      html += `<rect x="${x.toFixed(1)}" y="${barY.toFixed(1)}" width="${BAR_W}" height="${barH.toFixed(1)}" rx="3" fill="${barColor}" opacity="${opacity}"/>`;
+      if (barH > 14) {
+        const lbl = v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${Math.round(v/1000)}k` : String(v);
+        html += `<text x="${(x+BAR_W/2).toFixed(1)}" y="${(barY-3).toFixed(1)}" text-anchor="middle" font-family="DM Mono,monospace" font-size="6.5" fill="${barColor}">${lbl}</text>`;
+      }
+    } else {
+      html += `<rect x="${x.toFixed(1)}" y="${(CHART_H+CHART_TOP-2).toFixed(1)}" width="${BAR_W}" height="2" rx="1" fill="#DDE3EE"/>`;
+    }
+
+    // Etiqueta mes + indicador "hoy"
+    const mesIdx = (f.mes || 1) - 1;
+    const labelColor = isThisMonth ? 'var(--blue)' : '#6B7A96';
+    const labelW = isThisMonth ? '500' : '400';
+    html += `<text x="${(x+BAR_W/2).toFixed(1)}" y="105" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="${labelColor}" font-weight="${labelW}">${MESES[mesIdx]}</text>`;
   });
-  const realPts=[], projPts=[];
-  data6.forEach((v,i) => {
-    const x=toX(i), y=toY(v||0);
-    if(i<=hoyIdx)  realPts.push(`${x},${y}`);
-    if(i>=hoyIdx)  projPts.push(`${x},${y}`);
-  });
-  document.getElementById("chart-real").setAttribute("points", realPts.join(" "));
-  document.getElementById("chart-proj").setAttribute("points", projPts.join(" "));
-  const areaPts = data6.slice(0,hoyIdx+1).map((v,i)=>`L ${toX(i)} ${toY(v||0)}`).join(" ");
-  document.getElementById("chart-area").setAttribute("d", `M ${toX(0)} ${toY(data6[0]||0)} ${areaPts} L ${toX(hoyIdx)} 90 L ${toX(0)} 90 Z`);
-  const topeY = toY(tope);
-  document.getElementById("chart-tope-line").setAttribute("y1",topeY);
-  document.getElementById("chart-tope-line").setAttribute("y2",topeY);
-  document.getElementById("chart-tope-txt").setAttribute("y",topeY-2);
-  const hoyX = toX(hoyIdx);
-  document.getElementById("chart-today-line").setAttribute("x1",hoyX);
-  document.getElementById("chart-today-line").setAttribute("x2",hoyX);
-  document.getElementById("chart-today-dot").setAttribute("cx",hoyX);
-  document.getElementById("chart-today-dot").setAttribute("cy",toY(data6[hoyIdx]||0));
+
+  svg.innerHTML = html;
 }
 
 // ── ALERTAS ────────────────────────────────────────────────────────────────────
