@@ -232,6 +232,13 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .doc-dl-btn:disabled { opacity:.55; cursor:default; }
 .doc-constancia-err { font-size:12px; color:var(--red); padding:6px 10px; background:#E0454510; border-radius:7px; border:1px solid #E0454530; margin-top:4px; }
 
+@media print {
+  body > *:not(#constancia-modal) { display:none !important; }
+  #constancia-modal { position:static !important; background:none !important; display:block !important; }
+  #constancia-modal > div { box-shadow:none !important; border:1px solid #ccc; border-radius:8px !important; max-width:100% !important; }
+  #constancia-modal button { display:none !important; }
+}
+
 /* ── SALUD ── */
 .salud-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
 .salud-item { background:var(--light); border:1px solid var(--border); border-radius:10px; padding:12px; }
@@ -551,6 +558,44 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
   </div>
   <div class="drawer-body" id="drawer-body">
     <div style="text-align:center;padding:40px 0;color:var(--muted)">Cargando...</div>
+  </div>
+</div>
+
+<!-- Modal constancia inscripción -->
+<div class="modal-overlay" id="constancia-modal" style="align-items:center">
+  <div class="modal" style="border-radius:20px;max-width:440px;padding:28px 24px 24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:3px">ARCA · Sistema Registral</div>
+        <h3 style="margin:0;font-size:16px">Constancia de Inscripción</h3>
+      </div>
+      <div style="background:var(--light);border-radius:10px;padding:8px 12px;font-size:11px;font-weight:600;color:var(--green);letter-spacing:.5px" id="const-estado-badge">ACTIVO</div>
+    </div>
+    <div style="background:var(--light);border-radius:14px;padding:18px 16px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px">Apellido</div>
+          <div id="const-apellido" style="font-size:15px;font-weight:600"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px">Nombre</div>
+          <div id="const-nombre" style="font-size:15px;font-weight:600"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px">CUIT</div>
+          <div id="const-cuit" style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px">Categoría</div>
+          <div id="const-cat" style="font-size:15px;font-weight:600"></div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px">Datos consultados en tiempo real desde el padrón ARCA · <span id="const-fecha"></span></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-sec" onclick="closeConstanciaModal()" style="flex:1;padding:12px">Cerrar</button>
+      <button class="btn-pri" onclick="imprimirConstancia()" style="flex:1;padding:12px">🖨 Imprimir</button>
+    </div>
   </div>
 </div>
 
@@ -1100,7 +1145,7 @@ function renderBoveda(docs) {
   let html = `<div class="doc-item" id="doc-constancia-item">
     <div class="doc-icon">🏛️</div>
     <div class="doc-info"><div class="doc-name">Constancia de inscripción</div><div class="doc-date">ARCA · Monotributo</div></div>
-    <button class="doc-dl-btn" id="btn-constancia" onclick="descargarConstancia('${cuit}')">⬇ Descargar</button>
+    <button class="doc-dl-btn" id="btn-constancia" onclick="descargarConstancia('${cuit}')">Ver constancia</button>
   </div>`;
   const iconos = { pdf:"📄", imagen:"🖼️", excel:"📊", word:"📝" };
   (docs||[]).forEach(d => {
@@ -1130,8 +1175,17 @@ async function descargarConstancia(cuit) {
       const err = await r.json().catch(() => ({}));
       throw new Error(err.detail || "Error al consultar ARCA");
     }
-    const data = await r.json();
-    window.open(data.url_pdf, "_blank", "noreferrer");
+    const d = await r.json();
+    document.getElementById("const-apellido").textContent = d.apellido || "—";
+    document.getElementById("const-nombre").textContent   = d.nombre   || "—";
+    document.getElementById("const-cuit").textContent     = d.cuit_fmt || cuit;
+    document.getElementById("const-cat").textContent      = d.categoria ? `Cat. ${d.categoria}` : "—";
+    const badge = document.getElementById("const-estado-badge");
+    badge.textContent = d.estado || "ACTIVO";
+    badge.style.color = (d.estado||"").toUpperCase().includes("INAC") ? "var(--red)" : "var(--green)";
+    const f = d.fecha_consulta ? new Date(d.fecha_consulta + "T00:00:00").toLocaleDateString("es-AR", {day:"2-digit",month:"long",year:"numeric"}) : "";
+    document.getElementById("const-fecha").textContent = f;
+    document.getElementById("constancia-modal").classList.add("open");
   } catch(e) {
     const errEl = document.createElement("div");
     errEl.id = "constancia-error";
@@ -1139,9 +1193,18 @@ async function descargarConstancia(cuit) {
     errEl.textContent = "⚠ " + (e.message || "ARCA no responde. Intentá más tarde.");
     if (item) item.insertAdjacentElement("afterend", errEl);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "⬇ Descargar"; }
+    if (btn) { btn.disabled = false; btn.textContent = "Ver constancia"; }
   }
 }
+function closeConstanciaModal() {
+  document.getElementById("constancia-modal").classList.remove("open");
+}
+function imprimirConstancia() {
+  window.print();
+}
+document.getElementById("constancia-modal").addEventListener("click", e => {
+  if (e.target === document.getElementById("constancia-modal")) closeConstanciaModal();
+});
 
 // ── PLANES ─────────────────────────────────────────────────────────────────────
 function renderPlanes(planes) {
