@@ -88,8 +88,9 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 /* ── LAYOUT ── */
 .layout { display:flex; min-height:100vh; }
 
-/* ── SIDEBAR ── */
-.sidebar {
+/* ── SIDEBAR (eliminado) ── */
+.sidebar { display:none !important; }
+.UNUSED_sidebar {
   width:220px; background:var(--sidebar-bg);
   border-right:1px solid #152440;
   display:flex; flex-direction:column;
@@ -119,27 +120,27 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .sb-footer { padding:12px 16px; border-top:1px solid #1F3358; font-size:10px; color:#4D6A8A; text-align:center; }
 
 /* ── MAIN ── */
-.main { margin-left:220px; flex:1; }
+.main { margin-left:0; flex:1; }
 .topbar {
-  background:#fff; border-bottom:1px solid var(--border);
+  background:var(--sidebar-bg); border-bottom:none;
   padding:0 28px; height:60px;
   display:flex; align-items:center; justify-content:space-between;
   position:sticky; top:0; z-index:50;
-  box-shadow:0 1px 6px rgba(27,45,79,.06);
+  box-shadow:0 2px 12px rgba(0,0,0,.18);
 }
-.topbar-title { font-size:15px; font-weight:600; }
+.topbar-title { font-size:15px; font-weight:600; color:#fff; }
 .topbar-right { display:flex; align-items:center; gap:10px; }
-.topbar-date  { font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; }
-.badge-ok     { background:#2BAF8215; color:var(--green); border:1px solid #2BAF8228; font-size:11px; padding:4px 10px; border-radius:20px; font-weight:500; display:flex; align-items:center; gap:5px; }
-.badge-alert  { background:#E8A02018; color:var(--yellow); border:1px solid #E8A02033; font-size:11px; padding:4px 10px; border-radius:20px; font-weight:500; display:flex; align-items:center; gap:5px; animation:pulse 2.5s ease-in-out infinite; }
-.badge-danger { background:#E0454514; color:var(--red); border:1px solid #E0454528; font-size:11px; padding:4px 10px; border-radius:20px; font-weight:500; display:flex; align-items:center; gap:5px; animation:pulse 2.5s ease-in-out infinite; }
+.topbar-date  { font-size:12px; color:rgba(255,255,255,.5); font-family:'DM Mono',monospace; }
+.badge-ok     { background:rgba(43,175,130,.22); color:#2BAF82; border:1px solid rgba(43,175,130,.35); font-size:11px; padding:4px 10px; border-radius:20px; font-weight:500; display:flex; align-items:center; gap:5px; }
+.badge-alert  { background:rgba(232,160,32,.22); color:#E8A020; border:1px solid rgba(232,160,32,.35); font-size:11px; padding:4px 10px; border-radius:20px; font-weight:500; display:flex; align-items:center; gap:5px; animation:pulse 2.5s ease-in-out infinite; }
+.badge-danger { background:rgba(224,69,69,.22); color:#ff7575; border:1px solid rgba(224,69,69,.35); font-size:11px; padding:4px 10px; border-radius:20px; font-weight:500; display:flex; align-items:center; gap:5px; animation:pulse 2.5s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.7} }
 .topbar-icon-btn {
   width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background:var(--light); border:1px solid var(--border); cursor:pointer; color:var(--text); position:relative;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15); cursor:pointer; color:#fff; position:relative;
   transition:background .15s;
 }
-.topbar-icon-btn:hover { background:var(--border); }
+.topbar-icon-btn:hover { background:rgba(255,255,255,.18); }
 .tb-badge { position:absolute; top:3px; right:3px; background:var(--red); color:#fff; border-radius:50%; width:15px; height:15px; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; }
 .profile-rel { position:relative; }
 .profile-dropdown {
@@ -290,8 +291,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 
 /* ── RESPONSIVE ── */
 @media (max-width:900px) {
-  .sidebar { display:none; }
-  .main { margin-left:0; }
   .grid-top, .grid-mid, .grid-bot { grid-template-columns:1fr; }
   .content { padding:16px; }
   .topbar { padding:0 16px; }
@@ -361,41 +360,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 
 <!-- PORTAL -->
 <div class="layout" id="portal" style="display:none">
-
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-name">AXENDA</div>
-      <div class="logo-sub">Contable · Portal Cliente</div>
-    </div>
-
-    <div class="sb-user-row">
-      <div class="avatar" id="sb-avatar">--</div>
-      <div>
-        <div class="sb-user-name" id="sb-nombre">—</div>
-        <div class="sb-user-cat" id="sb-cat">Monotributo</div>
-      </div>
-    </div>
-
-    <div class="sb-body">
-
-      <div class="sb-widget">
-        <div class="sb-widget-label">Cuota mensual</div>
-        <div class="sb-widget-val" id="sb-cuota">$—</div>
-        <div class="sb-widget-sub" id="sb-venc">Vence el 20</div>
-        <div class="sb-estado" id="sb-estado-pago">—</div>
-        <button class="btn-ya-pague" id="sb-ya-pague-btn" style="display:none" onclick="marcarPagado()">✓ Ya pagué</button>
-      </div>
-
-      <div class="sb-widget">
-        <div class="sb-widget-label">Próximo corte</div>
-        <div class="sb-widget-val" style="color:var(--yellow)" id="sb-dias">— días</div>
-        <div class="sb-widget-sub" id="sb-corte">—</div>
-      </div>
-
-    </div>
-
-    <div class="sb-footer" id="sb-footer">axendacontable@gmail.com</div>
-  </aside>
 
   <main class="main">
     <div class="topbar">
@@ -789,18 +753,9 @@ function renderPortal() {
   else if (pct < 0.85){ semColor="#E8A020"; semLabel="ATENCIÓN";  semClass="badge-amarillo"; }
   else                { semColor="#E04545"; semLabel="AL LÍMITE"; semClass="badge-rojo"; }
 
-  // Sidebar
   const nom = CLIENTE.nombre || "";
   const ape = CLIENTE.apellido || "";
   const cat = (CLIENTE.categoria || "").toUpperCase();
-  document.getElementById("sb-avatar").textContent = [nom,ape].filter(Boolean).map(p=>p[0]).join("").slice(0,2).toUpperCase() || "AC";
-  document.getElementById("sb-nombre").textContent = [nom,ape].filter(Boolean).join(" ") || "—";
-  document.getElementById("sb-cat").textContent    = cat ? `Monotributo Cat. ${cat}` : "Monotributo";
-  document.getElementById("sb-cuota").textContent  = CLIENTE.cuota ? $$(CLIENTE.cuota) : "$—";
-  document.getElementById("sb-venc").textContent   = `Vence el 20 de ${MESES_FULL[hoy.getMonth()]}`;
-  document.getElementById("sb-dias").textContent   = corte.dias + " días";
-  document.getElementById("sb-corte").textContent  = "Corte " + corte.nombre;
-  renderSbEstado();
 
   // WA: usar número del backend si está disponible
   if (DATOS.whatsapp) WA = DATOS.whatsapp;
@@ -857,18 +812,19 @@ function renderPortal() {
     warnEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ Dentro del límite mensual</span> — Podés facturar hasta ${$$(limiteMensual)} este mes sin recategorización`;
   } else { warnEl.innerHTML=""; }
 
-  // Deuda en stat card
-  const deudaMonto = CLIENTE.deuda_monto || 0;
+  // Deuda (desde tabla deuda_manual via DATOS.deuda_total)
+  const deudaMonto = DATOS.deuda_total || 0;
+  const deudaDesc  = DATOS.deuda_desc  || (deudaMonto > 0 ? "Pendiente de regularización" : "Sin deuda registrada");
   const deudaEl = document.getElementById("stat-deuda");
   deudaEl.textContent = $$(deudaMonto);
   deudaEl.style.color = deudaMonto > 0 ? "var(--red)" : "var(--green)";
-  document.getElementById("stat-deuda-sub").textContent = deudaMonto > 0 ? (CLIENTE.deuda_descripcion || "Pendiente de regularización") : "Sin deuda registrada";
+  document.getElementById("stat-deuda-sub").textContent = deudaDesc;
   const deudaBadge = document.getElementById("stat-deuda-badge");
   const waDeudaBtn = document.getElementById("wa-deuda");
   if (deudaMonto > 0) {
     deudaBadge.textContent="⚠ Requiere atención"; deudaBadge.className="stat-badge sbadge-danger";
     waDeudaBtn.style.display = "inline-block";
-    waDeudaBtn.href = waUrl(`Hola! Consulto sobre la deuda con ARCA de ${$$(deudaMonto)}.`);
+    waDeudaBtn.href = waUrl(`Hola! Consulto sobre mi deuda de ${$$(deudaMonto)}.`);
   } else {
     deudaBadge.textContent="✓ Sin deuda"; deudaBadge.className="stat-badge sbadge-up";
     waDeudaBtn.style.display = "none";
@@ -915,30 +871,19 @@ function renderPortal() {
   }, 600);
 }
 
-function renderSbEstado() {
-  const est   = CLIENTE.estado_pago || "al_dia";
-  const esOk  = est === "al_dia" || est.includes("dia") || est.includes("día");
-  document.getElementById("sb-estado-pago").innerHTML = esOk
-    ? '<span style="color:#2BAF82;font-size:12px;font-weight:600;">✓ Al día</span>'
-    : est === "vencida"
-    ? '<span style="color:#E04545;font-size:12px;font-weight:600;">⚠ Vencida</span>'
-    : '<span style="color:#E8A020;font-size:12px;font-weight:600;">⚠ Pendiente</span>';
-  document.getElementById("sb-ya-pague-btn").style.display   = esOk ? "none" : "block";
-  const mainBtn = document.getElementById("main-ya-pague-btn");
-  if (mainBtn) mainBtn.style.display = esOk ? "none" : "block";
-}
-
 function renderStatCuotaBadge(est) {
   const b = document.getElementById("stat-cuota-badge");
   const ok = est === "al_dia" || (est||"").includes("dia") || (est||"").includes("día");
   b.textContent = ok ? "✓ Al día" : est === "vencida" ? "🔴 Vencida" : "⚠ Pendiente de pago";
   b.className   = ok ? "stat-badge sbadge-up" : est === "vencida" ? "stat-badge sbadge-danger" : "stat-badge sbadge-warn";
+  const btn = document.getElementById("main-ya-pague-btn");
+  if (btn) btn.style.display = ok ? "none" : "block";
 }
 
 // ── YA PAGUÉ ───────────────────────────────────────────────────────────────────
 async function marcarPagado() {
-  const btn = document.getElementById("sb-ya-pague-btn");
-  btn.disabled = true; btn.textContent = "Actualizando…";
+  const btn = document.getElementById("main-ya-pague-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Actualizando…"; }
   try {
     const r = await fetch(`${API}/clientes/${SESSION.slug}/estado-pago`, {
       method:"PATCH", headers:{"Content-Type":"application/json"},
@@ -946,14 +891,13 @@ async function marcarPagado() {
     });
     if (r.ok) {
       CLIENTE = {...CLIENTE, estado_pago:"al_dia"};
-      renderSbEstado();
       renderStatCuotaBadge("al_dia");
       ALERTAS_GENERADAS = generarAlertas(DATOS.pct, diasAlCorte(), DATOS.total_fac, DATOS.tope, CLIENTE, DATOS.planes);
       renderAlertas();
       renderBellBadge();
     }
   } catch {}
-  btn.disabled = false; btn.textContent = "✓ Ya pagué";
+  if (btn) { btn.disabled = false; btn.textContent = "✓ Ya pagué"; }
 }
 
 // ── GAUGE ──────────────────────────────────────────────────────────────────────
