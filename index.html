@@ -221,13 +221,16 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 
 /* ── BÓVEDA ── */
 .boveda-list { display:flex; flex-direction:column; gap:7px; margin-top:2px; }
-.doc-item { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:var(--light); border:1px solid var(--border); cursor:pointer; transition:.15s; text-decoration:none; color:inherit; }
+.doc-item { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:var(--light); border:1px solid var(--border); transition:.15s; text-decoration:none; color:inherit; }
 .doc-item:hover { border-color:var(--green); background:#F0FAF6; }
 .doc-icon   { width:32px; height:32px; background:#2BAF8215; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
 .doc-info   { flex:1; min-width:0; }
 .doc-name   { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .doc-date   { font-size:11px; color:var(--muted); margin-top:1px; }
 .doc-action { font-size:11px; color:var(--green); font-weight:500; flex-shrink:0; }
+.doc-dl-btn { border:none; background:var(--green); color:#fff; border-radius:8px; padding:6px 13px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:opacity .2s; flex-shrink:0; }
+.doc-dl-btn:disabled { opacity:.55; cursor:default; }
+.doc-constancia-err { font-size:12px; color:var(--red); padding:6px 10px; background:#E0454510; border-radius:7px; border:1px solid #E0454530; margin-top:4px; }
 
 /* ── SALUD ── */
 .salud-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
@@ -1094,12 +1097,11 @@ function closeDrawer() {
 function renderBoveda(docs) {
   const el = document.getElementById("boveda-list");
   const cuit = CLIENTE.cuit || SESSION.cuit || "";
-  const constanciaUrl = `https://serviciosweb.afip.gob.ar/crs/publico/constanciaAFIP.aspx?cuit=${cuit}`;
-  let html = `<a class="doc-item" href="${constanciaUrl}" target="_blank" rel="noreferrer">
+  let html = `<div class="doc-item" id="doc-constancia-item">
     <div class="doc-icon">🏛️</div>
     <div class="doc-info"><div class="doc-name">Constancia de inscripción</div><div class="doc-date">ARCA · Monotributo</div></div>
-    <div class="doc-action">Ver ↗</div>
-  </a>`;
+    <button class="doc-dl-btn" id="btn-constancia" onclick="descargarConstancia('${cuit}')">⬇ Descargar</button>
+  </div>`;
   const iconos = { pdf:"📄", imagen:"🖼️", excel:"📊", word:"📝" };
   (docs||[]).forEach(d => {
     const t = (d.tipo||"").toLowerCase();
@@ -1114,6 +1116,31 @@ function renderBoveda(docs) {
     html += `<div style="color:var(--muted);font-size:13px;padding:8px 0">No hay documentos cargados todavía</div>`;
   }
   el.innerHTML = html;
+}
+
+async function descargarConstancia(cuit) {
+  const btn  = document.getElementById("btn-constancia");
+  const item = document.getElementById("doc-constancia-item");
+  const prevErr = document.getElementById("constancia-error");
+  if (prevErr) prevErr.remove();
+  if (btn) { btn.disabled = true; btn.textContent = "Consultando…"; }
+  try {
+    const r = await fetch(`${API}/constancia/${cuit}`);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.detail || "Error al consultar ARCA");
+    }
+    const data = await r.json();
+    window.open(data.url_pdf, "_blank", "noreferrer");
+  } catch(e) {
+    const errEl = document.createElement("div");
+    errEl.id = "constancia-error";
+    errEl.className = "doc-constancia-err";
+    errEl.textContent = "⚠ " + (e.message || "ARCA no responde. Intentá más tarde.");
+    if (item) item.insertAdjacentElement("afterend", errEl);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "⬇ Descargar"; }
+  }
 }
 
 // ── PLANES ─────────────────────────────────────────────────────────────────────
