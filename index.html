@@ -812,19 +812,23 @@ function renderPortal() {
     warnEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ Dentro del límite mensual</span> — Podés facturar hasta ${$$(limiteMensual)} este mes sin recategorización`;
   } else { warnEl.innerHTML=""; }
 
-  // Deuda (desde tabla deuda_manual via DATOS.deuda_total)
+  // Deuda calculada (historial_cuotas no pagadas + deuda_manual)
   const deudaMonto = DATOS.deuda_total || 0;
-  const deudaDesc  = DATOS.deuda_desc  || (deudaMonto > 0 ? "Pendiente de regularización" : "Sin deuda registrada");
   const deudaEl = document.getElementById("stat-deuda");
   deudaEl.textContent = $$(deudaMonto);
   deudaEl.style.color = deudaMonto > 0 ? "var(--red)" : "var(--green)";
-  document.getElementById("stat-deuda-sub").textContent = deudaDesc;
+  const deudaSubEl = document.getElementById("stat-deuda-sub");
+  if (deudaMonto > 0 && DATOS.deuda_desc) {
+    deudaSubEl.textContent = DATOS.deuda_desc;
+  } else {
+    deudaSubEl.textContent = deudaMonto > 0 ? "Pendiente de regularización" : "Sin deuda registrada";
+  }
   const deudaBadge = document.getElementById("stat-deuda-badge");
   const waDeudaBtn = document.getElementById("wa-deuda");
   if (deudaMonto > 0) {
     deudaBadge.textContent="⚠ Requiere atención"; deudaBadge.className="stat-badge sbadge-danger";
     waDeudaBtn.style.display = "inline-block";
-    waDeudaBtn.href = waUrl(`Hola! Consulto sobre mi deuda de ${$$(deudaMonto)}.`);
+    waDeudaBtn.href = waUrl(`Hola! Consulto sobre mi deuda de ${$$(deudaMonto)}. ${DATOS.deuda_desc||""}`);
   } else {
     deudaBadge.textContent="✓ Sin deuda"; deudaBadge.className="stat-badge sbadge-up";
     waDeudaBtn.style.display = "none";
