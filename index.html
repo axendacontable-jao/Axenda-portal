@@ -762,7 +762,7 @@ function renderPortal() {
   const cat = (CLIENTE.categoria || "").toUpperCase();
 
   // WA: usar número del backend si está disponible
-  if (DATOS.whatsapp) WA = DATOS.whatsapp;
+  if (DATOS.whatsapp) WA = DATOS.whatsapp.replace(/\D/g, '');
   const waBase = waUrl("Hola! Te contacto desde el portal de Axenda Contable.");
   document.getElementById("wa-fab").href      = waBase;
   document.getElementById("wa-inactive").href = waUrl("Hola! Consulto sobre mi acceso al portal de Axenda Contable.");
