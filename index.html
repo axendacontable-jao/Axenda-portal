@@ -892,12 +892,11 @@ async function marcarPagado() {
   const btn = document.getElementById("main-ya-pague-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Actualizando…"; }
   try {
-    const r = await fetch(`${API}/clientes/${SESSION.slug}/estado-pago`, {
+    const r = await fetch(`${API}/portal/${SESSION.slug}/marcar-pago`, {
       method:"PATCH", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ estado_pago:"al_dia" }),
     });
     if (r.ok) {
-      CLIENTE = {...CLIENTE, estado_pago:"al_dia"};
+      DATOS.estado_cuota = "al_dia";
       renderStatCuotaBadge("al_dia");
       ALERTAS_GENERADAS = generarAlertas(DATOS.pct, diasAlCorte(), DATOS.total_fac, DATOS.tope, CLIENTE, DATOS.planes);
       renderAlertas();
@@ -987,8 +986,8 @@ function renderBarChart(fac6, referenciaMensual, hoy) {
 function generarAlertas(pct, corte, totalFac, tope, cli, planes) {
   const hoy = new Date();
   const al  = [];
-  const est = cli.estado_pago || "al_dia";
-  const esOk = est==="al_dia"||(est||"").includes("dia")||(est||"").includes("día");
+  const est = (DATOS && DATOS.estado_cuota) || "pendiente";
+  const esOk = est === "al_dia";
 
   if (pct >= 1) {
     al.push({ tipo:"rojo", ico:"🔴", titulo:"Superaste el límite de categoría",
