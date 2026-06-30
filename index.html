@@ -458,7 +458,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
           <div class="chart-legend">
             <div class="legend-item"><div class="legend-dot" style="background:#2BAF82"></div>Facturado</div>
             <div class="legend-item"><div class="legend-dot" style="background:#E04545"></div>Por encima del límite</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#E8A020;border-radius:0;height:2px;width:16px"></div>Límite mensual</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#E8A020;border-radius:0;height:2px;width:16px"></div>Referencia mensual</div>
           </div>
           <div class="proj-warning" id="proj-warning"></div>
         </div>
@@ -480,7 +480,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
           <div class="stat-badge sbadge-up" id="stat-prom-badge">—</div>
         </div>
         <div class="card">
-          <div class="card-label">Deuda con ARCA</div>
+          <div class="card-label">Deuda estimada</div>
           <div class="stat-val" id="stat-deuda" style="color:var(--green)">$0</div>
           <div class="stat-sub" id="stat-deuda-sub">Sin deuda registrada</div>
           <div class="stat-badge sbadge-up" id="stat-deuda-badge">✓ Sin deuda</div>
@@ -801,19 +801,18 @@ function renderPortal() {
 
   // Gráfico barras mensuales
   const fac6 = (facturacion||[]).sort((a,b)=>a.anio!==b.anio?a.anio-b.anio:a.mes-b.mes).slice(-6);
-  const mesesRestantes = Math.max(Math.ceil(corte.dias/30), 1);
-  const limiteMensual  = tope > 0 ? Math.max((tope - total_fac) / mesesRestantes, 0) : 0;
-  renderBarChart(fac6, limiteMensual, hoy);
+  const referenciaMensual = tope > 0 ? Math.round(tope / 12) : 0;
+  renderBarChart(fac6, referenciaMensual, hoy);
 
   const warnEl = document.getElementById("proj-warning");
   const mesActualMonto = fac6.find(f=>f.mes===(hoy.getMonth()+1)&&f.anio===hoy.getFullYear());
   const mesAct = mesActualMonto ? (mesActualMonto.monto||0) : 0;
-  if (limiteMensual > 0 && mesAct > limiteMensual) {
+  if (referenciaMensual > 0 && mesAct > referenciaMensual) {
     warnEl.className="proj-warning alerta-yellow";
-    warnEl.innerHTML=`<span style="color:var(--yellow);font-weight:600">⚠ Este mes superás el límite mensual</span> — Límite: ${$$(limiteMensual)}/mes para no recategorizarte`;
-  } else if (limiteMensual > 0) {
+    warnEl.innerHTML=`<span style="color:var(--yellow);font-weight:600">⚠ Este mes superás la referencia mensual</span> — Referencia: ${$$(referenciaMensual)}/mes (tope anual ÷ 12)`;
+  } else if (referenciaMensual > 0) {
     warnEl.className="proj-warning alerta-green";
-    warnEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ Dentro del límite mensual</span> — Podés facturar hasta ${$$(limiteMensual)} este mes sin recategorización`;
+    warnEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ Dentro del límite de la categoría</span> — Referencia mensual: ${$$(referenciaMensual)} (tope anual ÷ 12)`;
   } else { warnEl.innerHTML=""; }
 
   // Deuda calculada (historial_cuotas no pagadas + deuda_manual)
@@ -841,7 +840,7 @@ function renderPortal() {
   // Stats cuota / total
   document.getElementById("stat-cuota").textContent    = CLIENTE.cuota ? $$(CLIENTE.cuota) : "$—";
   document.getElementById("stat-cuota-sub").textContent = `Vence el 20 de ${MESES_FULL[hoy.getMonth()]} ${hoy.getFullYear()}`;
-  renderStatCuotaBadge(CLIENTE.estado_pago);
+  renderStatCuotaBadge(DATOS.estado_cuota);
   document.getElementById("stat-total").textContent    = $$(total_fac);
   document.getElementById("stat-prom-badge").textContent = `${mesesCargados} mes${mesesCargados!==1?"es":""} · prom. ${$$(promedio)}/mes`;
 
@@ -927,11 +926,11 @@ function renderGauge(pct, color) {
 }
 
 // ── CHART BARRAS MENSUALES ─────────────────────────────────────────────────────
-function renderBarChart(fac6, limiteMensual, hoy) {
+function renderBarChart(fac6, referenciaMensual, hoy) {
   const svg = document.getElementById("bar-chart-svg");
   if (!svg) return;
   const montos = fac6.map(f => f.monto || 0);
-  const max    = Math.max(...montos, limiteMensual, 1) * 1.18;
+  const max    = Math.max(...montos, referenciaMensual, 1) * 1.18;
   const CHART_H = 88, CHART_TOP = 10;
   const toY = v => Math.round(CHART_H - (v/max)*(CHART_H-CHART_TOP) + CHART_TOP);
   const BAR_W = 30, SLOT = 260/6, PAD = (SLOT-BAR_W)/2;
@@ -945,11 +944,11 @@ function renderBarChart(fac6, limiteMensual, hoy) {
     html += `<line x1="0" y1="${y}" x2="260" y2="${y}" stroke="#DDE3EE" stroke-width=".5" stroke-dasharray="3,2"/>`;
   });
 
-  // Línea punteada del límite mensual
-  if (limiteMensual > 0) {
-    const ly = toY(limiteMensual);
+  // Línea punteada de referencia mensual (tope anual ÷ 12)
+  if (referenciaMensual > 0) {
+    const ly = toY(referenciaMensual);
     html += `<line x1="0" y1="${ly}" x2="260" y2="${ly}" stroke="#E8A020" stroke-width="1.5" stroke-dasharray="6,3"/>`;
-    html += `<text x="3" y="${ly-3}" font-family="DM Mono,monospace" font-size="6" fill="#E8A020">límite</text>`;
+    html += `<text x="3" y="${ly-3}" font-family="DM Mono,monospace" font-size="6" fill="#E8A020">ref.</text>`;
   }
 
   // Barras
@@ -960,7 +959,7 @@ function renderBarChart(fac6, limiteMensual, hoy) {
     const barY = CHART_H - barH + CHART_TOP;
     const isFuture = (f.anio > añoHoy) || (f.anio === añoHoy && f.mes > mesHoy);
     const isThisMonth = f.mes === mesHoy && f.anio === añoHoy;
-    const overLimit = limiteMensual > 0 && v > limiteMensual;
+    const overLimit = referenciaMensual > 0 && v > referenciaMensual;
     const barColor = isFuture ? '#CBD5E1' : overLimit ? '#E04545' : '#2BAF82';
     const opacity  = isFuture ? '0.35' : isThisMonth ? '1' : '0.75';
 
