@@ -805,14 +805,14 @@ function renderPortal() {
   renderBarChart(fac6, referenciaMensual, hoy);
 
   const warnEl = document.getElementById("proj-warning");
-  const mesActualMonto = fac6.find(f=>f.mes===(hoy.getMonth()+1)&&f.anio===hoy.getFullYear());
-  const mesAct = mesActualMonto ? (mesActualMonto.monto||0) : 0;
-  if (referenciaMensual > 0 && mesAct > referenciaMensual) {
+  if (tope > 0 && total_fac > tope) {
+    const exceso = total_fac - tope;
     warnEl.className="proj-warning alerta-yellow";
-    warnEl.innerHTML=`<span style="color:var(--yellow);font-weight:600">⚠ Este mes superás la referencia mensual</span> — Referencia: ${$$(referenciaMensual)}/mes (tope anual ÷ 12)`;
-  } else if (referenciaMensual > 0) {
+    warnEl.innerHTML=`<span style="color:var(--yellow);font-weight:600">⚠ Te pasaste por ${$$(exceso)} del límite de la categoría</span>`;
+  } else if (tope > 0) {
+    const restante = tope - total_fac;
     warnEl.className="proj-warning alerta-green";
-    warnEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ Dentro del límite de la categoría</span> — Referencia mensual: ${$$(referenciaMensual)} (tope anual ÷ 12)`;
+    warnEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ Dentro del límite de la categoría</span> — Podés facturar hasta ${$$(restante)} este período sin recategorizarte`;
   } else { warnEl.innerHTML=""; }
 
   // Deuda calculada (historial_cuotas no pagadas + deuda_manual)
