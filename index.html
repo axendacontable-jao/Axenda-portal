@@ -610,12 +610,13 @@ function fmtFecha(s) {
 
 function diasAlCorte() {
   const hoy = new Date();
-  const julio = new Date(hoy.getFullYear(), 6, 1);
-  const enero = new Date(hoy.getFullYear()+1, 0, 1);
-  const prox  = hoy < julio ? julio : enero;
+  const y = hoy.getFullYear();
+  const NOMBRES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const candidatos = [new Date(y,1,1), new Date(y,7,1), new Date(y+1,1,1)];
+  const prox = candidatos.find(d => d > hoy);
   return {
     dias: Math.ceil((prox - hoy) / 86400000),
-    nombre: prox.getMonth() === 6 ? `Julio ${prox.getFullYear()}` : `Enero ${prox.getFullYear()}`,
+    nombre: `Recategorización ${NOMBRES[prox.getMonth()]} ${prox.getFullYear()}`,
     fecha: prox,
   };
 }
@@ -771,11 +772,11 @@ function renderPortal() {
   // Topbar
   document.getElementById("topbar-fecha").textContent = `${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
   const badgeEl = document.getElementById("topbar-badge");
-  document.getElementById("badge-text").textContent = pct<0.6 ? "✓ En orden" : pct<0.85 ? `⚠ ${corte.dias}d al corte` : "🔴 Al límite";
+  document.getElementById("badge-text").textContent = pct<0.6 ? "✓ En orden" : pct<0.85 ? `⚠ ${corte.dias}d para recat.` : "🔴 Al límite";
   badgeEl.className = semClass==="badge-verde" ? "badge-ok" : semClass==="badge-amarillo" ? "badge-alert" : "badge-danger";
 
   // Semáforo
-  document.getElementById("semaforo-sub").textContent = `Corte ${corte.nombre} · ${cat ? "Cat. "+cat : "Sin categoría"}`;
+  document.getElementById("semaforo-sub").textContent = `${corte.nombre} · ${cat ? "Cat. "+cat : "Sin categoría"}`;
   const badgeSem = document.getElementById("semaforo-badge");
   badgeSem.className = `semaforo-badge ${semClass}`;
   badgeSem.innerHTML = `<div class="dot"></div> ${semLabel}`;
@@ -994,7 +995,7 @@ function generarAlertas(pct, corte, totalFac, tope, cli, planes) {
       desc:`Facturaste ${$$(totalFac)}, que supera el tope de Cat. ${cli.categoria} (${$$(tope)}). Hablá con tu contador.`, fecha:"Hoy" });
   } else if (pct >= 0.85) {
     al.push({ tipo:"rojo", ico:"🔴", titulo:"Muy cerca del límite",
-      desc:`Llevás el ${Math.round(pct*100)}% del tope. Quedan ${$$(tope-totalFac)} de margen y ${corte.dias} días al corte.`, fecha:"Urgente" });
+      desc:`Llevás el ${Math.round(pct*100)}% del tope. Quedan ${$$(tope-totalFac)} de margen y ${corte.dias} días para ${corte.nombre}.`, fecha:"Urgente" });
   } else if (pct >= 0.60) {
     al.push({ tipo:"amarillo", ico:"⚠️", titulo:"Atención — cerca del límite",
       desc:`Llevás el ${Math.round(pct*100)}% del tope de Cat. ${cli.categoria}. Margen restante: ${$$(tope-totalFac)}.`, fecha:"Hoy" });
@@ -1017,7 +1018,7 @@ function generarAlertas(pct, corte, totalFac, tope, cli, planes) {
   }
 
   if (corte.dias <= 30 && pct > 0.5) {
-    al.push({ tipo:"amarillo", ico:"📅", titulo:`${corte.dias} días para el corte de ${corte.nombre}`,
+    al.push({ tipo:"amarillo", ico:"📅", titulo:`${corte.dias} días para ${corte.nombre}`,
       desc:`Quedan ${corte.dias} días para la recategorización. Revisá con tu contador si conviene frenar o acelerar.`, fecha:`${corte.dias}d` });
   }
 
