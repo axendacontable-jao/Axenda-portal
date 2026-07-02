@@ -445,7 +445,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
               <div class="bar-track"><div class="bar-fill bar-green" style="width:100%;opacity:.2"></div></div>
             </div>
           <div class="sem-dias-row">
-            <span style="font-size:12px;color:var(--muted)">Próximo corte · <strong id="sem-corte-nom" style="color:var(--text)">—</strong></span>
+            <span style="font-size:12px;color:var(--muted)">Recategorización · <strong id="sem-corte-nom" style="color:var(--text)">—</strong></span>
             <span style="font-size:15px;font-weight:600;font-family:'DM Mono',monospace" id="sem-dias-num">— días</span>
           </div>
         </div>
@@ -611,14 +611,24 @@ function fmtFecha(s) {
 function diasAlCorte() {
   const hoy = new Date();
   const y = hoy.getFullYear();
-  const NOMBRES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  const candidatos = [new Date(y,1,1), new Date(y,7,1), new Date(y+1,1,1)];
-  const prox = candidatos.find(d => d > hoy);
-  return {
-    dias: Math.ceil((prox - hoy) / 86400000),
-    nombre: `Recategorización ${NOMBRES[prox.getMonth()]} ${prox.getFullYear()}`,
-    fecha: prox,
-  };
+  const C = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  // Ventanas: 20 Ene – 5 Feb (recat Febrero) y 20 Jul – 5 Ago (recat Agosto)
+  const ventanas = [
+    { ini: new Date(y,0,20), fin: new Date(y,1,5),  nombre:`Recategorización Febrero ${y}`,   corto:`Feb ${y}`,   periodo:`Ene–Dic ${y-1}` },
+    { ini: new Date(y,6,20), fin: new Date(y,7,5),  nombre:`Recategorización Agosto ${y}`,    corto:`Ago ${y}`,   periodo:`Jul ${y-1}–Jun ${y}` },
+    { ini: new Date(y+1,0,20), fin: new Date(y+1,1,5), nombre:`Recategorización Febrero ${y+1}`, corto:`Feb ${y+1}`, periodo:`Ene–Dic ${y}` },
+  ];
+  const vent = (v) => `${v.ini.getDate()} ${C[v.ini.getMonth()]} – ${v.fin.getDate()} ${C[v.fin.getMonth()]}`;
+  const abierta = ventanas.find(v => hoy >= v.ini && hoy <= v.fin);
+  if (abierta) {
+    return { abierta:true, dias:Math.ceil((abierta.fin-hoy)/86400000),
+      nombre:abierta.nombre, corto:abierta.corto, fecha:abierta.fin,
+      periodo:abierta.periodo, ventanaLabel:vent(abierta) };
+  }
+  const prox = ventanas.find(v => v.ini > hoy);
+  return { abierta:false, dias:Math.ceil((prox.ini-hoy)/86400000),
+    nombre:prox.nombre, corto:prox.corto, fecha:prox.ini,
+    periodo:prox.periodo, ventanaLabel:vent(prox) };
 }
 
 function waUrl(msg) { return `https://wa.me/${WA}?text=${encodeURIComponent(msg || "Hola! Te contacto desde el portal de Axenda Contable.")}`; }
@@ -745,7 +755,6 @@ async function cargarPortal() {
 function renderPortal() {
   const { tope, facturacion, total_fac, pct, planes, documentos, novedades } = DATOS;
   const hoy = new Date();
-  const corte = diasAlCorte();
 
   const montos = (facturacion||[]).map(f => f.monto || 0).filter(m => m > 0);
   const mesesCargados = montos.length || 1;
@@ -772,11 +781,11 @@ function renderPortal() {
   // Topbar
   document.getElementById("topbar-fecha").textContent = `${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
   const badgeEl = document.getElementById("topbar-badge");
-  document.getElementById("badge-text").textContent = pct<0.6 ? "✓ En orden" : pct<0.85 ? `⚠ ${corte.dias}d para recat.` : "🔴 Al límite";
+  document.getElementById("badge-text").textContent = pct<0.6 ? "✓ En orden" : pct<0.85 ? "⚠ Atención" : "🔴 Al límite";
   badgeEl.className = semClass==="badge-verde" ? "badge-ok" : semClass==="badge-amarillo" ? "badge-alert" : "badge-danger";
 
   // Semáforo
-  document.getElementById("semaforo-sub").textContent = `${corte.nombre} · ${cat ? "Cat. "+cat : "Sin categoría"}`;
+  document.getElementById("semaforo-sub").textContent = cat ? "Cat. " + cat : "Sin categoría";
   const badgeSem = document.getElementById("semaforo-badge");
   badgeSem.className = `semaforo-badge ${semClass}`;
   badgeSem.innerHTML = `<div class="dot"></div> ${semLabel}`;
@@ -793,12 +802,21 @@ function renderPortal() {
   document.getElementById("bar-facturado").style.width = Math.min(pct*100,100)+"%";
   document.getElementById("bar-facturado").className   = `bar-fill ${pct<0.6?"bar-green":pct<0.85?"bar-yellow":"bar-red"}`;
   document.getElementById("bar-margen").style.width    = Math.min((margen/tope)*100,100)+"%";
-  // Días al corte dentro del semáforo
-  document.getElementById("sem-corte-nom").textContent = corte.nombre;
-  const diasCol = corte.dias<=15?"var(--red)":corte.dias<=45?"var(--yellow)":"var(--green)";
-  const semDiasEl = document.getElementById("sem-dias-num");
-  semDiasEl.textContent = corte.dias + " días";
-  semDiasEl.style.color = diasCol;
+  // Fila inferior del semáforo — muestra estado de recategorización
+  const ultimaRecat = DATOS && DATOS.ultima_recat;
+  const recatPend   = DATOS && DATOS.recat_pendiente;
+  if (ultimaRecat) {
+    const fUlt = new Date(ultimaRecat.fecha + "T12:00:00").toLocaleDateString("es-AR", {day:"numeric",month:"long",year:"numeric"});
+    document.getElementById("sem-corte-nom").textContent = `Última recat.: ${fUlt}`;
+    const semDiasEl = document.getElementById("sem-dias-num");
+    semDiasEl.textContent = ultimaRecat.categoria_nueva ? "Cat. " + ultimaRecat.categoria_nueva : "—";
+    semDiasEl.style.color = "var(--green)";
+  } else {
+    document.getElementById("sem-corte-nom").textContent = "Sin recategorizaciones registradas";
+    const semDiasEl = document.getElementById("sem-dias-num");
+    semDiasEl.textContent = "—";
+    semDiasEl.style.color = "var(--muted)";
+  }
 
   // Gráfico barras mensuales
   const fac6 = (facturacion||[]).sort((a,b)=>a.anio!==b.anio?a.anio-b.anio:a.mes-b.mes).slice(-6);
@@ -846,7 +864,7 @@ function renderPortal() {
   document.getElementById("stat-prom-badge").textContent = `${mesesCargados} mes${mesesCargados!==1?"es":""} · prom. ${$$(promedio)}/mes`;
 
   // Alertas
-  ALERTAS_GENERADAS = generarAlertas(pct, corte, total_fac, tope, CLIENTE, planes);
+  ALERTAS_GENERADAS = generarAlertas(pct, total_fac, tope, CLIENTE, planes);
   renderAlertas();
   renderBellBadge();
 
@@ -899,7 +917,7 @@ async function marcarPagado() {
     if (r.ok) {
       DATOS.estado_cuota = "al_dia";
       renderStatCuotaBadge("al_dia");
-      ALERTAS_GENERADAS = generarAlertas(DATOS.pct, diasAlCorte(), DATOS.total_fac, DATOS.tope, CLIENTE, DATOS.planes);
+      ALERTAS_GENERADAS = generarAlertas(DATOS.pct, DATOS.total_fac, DATOS.tope, CLIENTE, DATOS.planes);
       renderAlertas();
       renderBellBadge();
     }
@@ -984,7 +1002,7 @@ function renderBarChart(fac6, referenciaMensual, hoy) {
 }
 
 // ── ALERTAS ────────────────────────────────────────────────────────────────────
-function generarAlertas(pct, corte, totalFac, tope, cli, planes) {
+function generarAlertas(pct, totalFac, tope, cli, planes) {
   const hoy = new Date();
   const al  = [];
   const est = (DATOS && DATOS.estado_cuota) || "pendiente";
@@ -995,13 +1013,13 @@ function generarAlertas(pct, corte, totalFac, tope, cli, planes) {
       desc:`Facturaste ${$$(totalFac)}, que supera el tope de Cat. ${cli.categoria} (${$$(tope)}). Hablá con tu contador.`, fecha:"Hoy" });
   } else if (pct >= 0.85) {
     al.push({ tipo:"rojo", ico:"🔴", titulo:"Muy cerca del límite",
-      desc:`Llevás el ${Math.round(pct*100)}% del tope. Quedan ${$$(tope-totalFac)} de margen y ${corte.dias} días para ${corte.nombre}.`, fecha:"Urgente" });
+      desc:`Llevás el ${Math.round(pct*100)}% del tope. Quedan ${$$(tope-totalFac)} de margen. Hablá con tu contador.`, fecha:"Urgente" });
   } else if (pct >= 0.60) {
     al.push({ tipo:"amarillo", ico:"⚠️", titulo:"Atención — cerca del límite",
       desc:`Llevás el ${Math.round(pct*100)}% del tope de Cat. ${cli.categoria}. Margen restante: ${$$(tope-totalFac)}.`, fecha:"Hoy" });
   } else {
-    al.push({ tipo:"verde", ico:"✅", titulo:"Recategorización — en orden",
-      desc:`Llevás el ${Math.round(pct*100)}% del tope. Tenés ${$$(tope-totalFac)} de margen libre hasta ${corte.nombre}.`, fecha:"Hoy" });
+    al.push({ tipo:"verde", ico:"✅", titulo:"Facturación en orden",
+      desc:`Llevás el ${Math.round(pct*100)}% del tope. Tenés ${$$(tope-totalFac)} de margen libre.`, fecha:"Hoy" });
   }
 
   if (!esOk) {
@@ -1017,9 +1035,16 @@ function generarAlertas(pct, corte, totalFac, tope, cli, planes) {
     }
   }
 
-  if (corte.dias <= 30 && pct > 0.5) {
-    al.push({ tipo:"amarillo", ico:"📅", titulo:`${corte.dias} días para ${corte.nombre}`,
-      desc:`Quedan ${corte.dias} días para la recategorización. Revisá con tu contador si conviene frenar o acelerar.`, fecha:`${corte.dias}d` });
+  const _recat = DATOS && DATOS.ultima_recat;
+  const _recatPend = DATOS && DATOS.recat_pendiente;
+  if (_recatPend) {
+    al.push({ tipo:"amarillo", ico:"📊", titulo:"Recategorización pendiente",
+      desc:"Hay una recategorización pendiente. Tu contador te va a avisar cuando esté lista.", fecha:"Pendiente" });
+  } else if (_recat) {
+    const _fR = new Date(_recat.fecha + "T12:00:00").toLocaleDateString("es-AR", {day:"numeric",month:"long",year:"numeric"});
+    const _catR = _recat.categoria_nueva ? ` — Categoría ${_recat.categoria_nueva}` : "";
+    al.push({ tipo:"verde", ico:"✅", titulo:"Recategorización al día",
+      desc:`Última recategorización: ${_fR}${_catR}.`, fecha:"Hecho" });
   }
 
   (planes||[]).filter(p=>p.estado==="activo"&&p.proximo_venc).forEach(p => {
